@@ -10,7 +10,7 @@ export default function SponsorPage() {
       backHref="/onboarding"
       eyebrow="Account setup"
       title="Verify your sponsor"
-      description="Enter your sponsor's Ghana phone number to confirm their account."
+      description="Enter your sponsor's phone number to confirm their account."
     >
       <SponsorForm />
     </AuthShell>
