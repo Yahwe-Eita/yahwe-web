@@ -150,26 +150,29 @@ a {
 
 .landing-page {
   min-height: 100svh;
-  padding: clamp(1rem, 2.5vw, 2rem);
+  display: grid;
+  place-items: center;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
   color: #ffffff;
   background:
-    radial-gradient(circle at 88% 14%, rgb(239 139 50 / 22%), transparent 26rem),
-    radial-gradient(circle at 10% 88%, rgb(97 155 94 / 22%), transparent 30rem),
+    radial-gradient(circle at 82% 12%, rgb(239 139 50 / 15%), transparent 24rem),
+    radial-gradient(circle at 12% 88%, rgb(97 155 94 / 18%), transparent 28rem),
     #0b1710;
 }
 
 .landing-shell {
   display: grid;
-  width: min(78rem, 100%);
-  min-height: calc(100svh - clamp(2rem, 5vw, 4rem));
+  grid-template-rows: auto 1fr;
+  width: min(70rem, 100%);
+  min-height: min(46rem, calc(100svh - clamp(1.5rem, 4vw, 3rem)));
   margin: 0 auto;
   overflow: hidden;
   border: 1px solid rgb(255 255 255 / 12%);
   border-radius: clamp(1.25rem, 3vw, 2rem);
   background:
-    linear-gradient(135deg, rgb(255 255 255 / 5%), transparent 45%),
-    linear-gradient(145deg, #315c35 0%, #183820 100%);
-  box-shadow: 0 32px 90px rgb(0 0 0 / 28%);
+    linear-gradient(135deg, rgb(255 255 255 / 4%), transparent 48%),
+    #214b2b;
+  box-shadow: 0 28px 75px rgb(0 0 0 / 24%);
 }
 
 .landing-nav {
@@ -200,131 +203,63 @@ a {
 }
 
 .landing-hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(22rem, 0.85fr);
-  min-height: calc(100% - 5.5rem);
+  display: flex;
+  min-height: 0;
   align-items: center;
-  gap: clamp(2rem, 6vw, 6rem);
-  padding: clamp(2.5rem, 7vw, 6rem) clamp(1.25rem, 6vw, 5rem);
+  justify-content: center;
+  padding: clamp(2.5rem, 8vh, 5rem) clamp(1.25rem, 6vw, 5rem) clamp(4rem, 12vh, 7rem);
 }
 
 .landing-content {
   display: grid;
-  max-width: 37rem;
-  gap: 1.75rem;
+  width: min(42rem, 100%);
+  gap: 1.5rem;
   align-content: center;
+  justify-items: center;
+  text-align: center;
 }
 
 .landing-content h1 {
-  max-width: 8ch;
+  max-width: 12ch;
   color: #ffffff;
-  font-size: clamp(3.6rem, 8vw, 6.8rem);
-  line-height: 0.88;
-  letter-spacing: -0.07em;
+  font-size: clamp(3rem, 7vw, 5.9rem);
+  line-height: 0.94;
+  letter-spacing: -0.065em;
 }
 
-.landing-dots {
-  display: flex;
-  gap: 0.5rem;
+.landing-eyebrow {
+  margin: 0;
+  color: #f6a258;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
-.landing-dots span {
-  width: 0.55rem;
-  height: 0.55rem;
-  border-radius: 999px;
-  background: rgb(255 255 255 / 35%);
-}
-
-.landing-dots span:first-child {
-  width: 1.8rem;
-  background: var(--accent);
+.landing-copy {
+  max-width: 34rem;
+  margin: 0;
+  color: rgb(255 255 255 / 72%);
+  font-size: clamp(1rem, 2vw, 1.12rem);
+  line-height: 1.65;
 }
 
 .landing-actions {
   display: flex;
-  flex-wrap: wrap;
+  width: min(25rem, 100%);
   gap: 0.8rem;
 }
 
 .landing-actions .button {
+  flex: 1;
   min-height: 3.2rem;
   padding-inline: 1.5rem;
 }
 
-.landing-visual {
-  position: relative;
-  width: min(26rem, 100%);
-  aspect-ratio: 1;
-  justify-self: center;
-}
-
-.network-orbit {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  border: 1px solid rgb(255 255 255 / 20%);
-  border-radius: 999px;
-  transform: translate(-50%, -50%);
-}
-
-.network-orbit-outer {
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle, rgb(255 255 255 / 8%), transparent 65%);
-}
-
-.network-orbit-inner {
-  width: 58%;
-  height: 58%;
-  border-color: rgb(239 139 50 / 45%);
-}
-
-.network-center,
-.network-node {
-  position: absolute;
-  display: grid;
-  place-items: center;
-  border: 1px solid rgb(255 255 255 / 22%);
-  border-radius: 1rem;
-  background: rgb(255 255 255 / 11%);
-  box-shadow: 0 16px 38px rgb(0 0 0 / 18%);
-  backdrop-filter: blur(10px);
-}
-
-.network-center {
-  top: 50%;
-  left: 50%;
-  width: 6rem;
-  height: 6rem;
-  background: var(--accent);
-  color: #172119;
-  font-size: 2rem;
-  font-weight: 900;
-  transform: translate(-50%, -50%);
-}
-
-.network-node {
-  width: 3.2rem;
-  height: 3.2rem;
-  color: rgb(255 255 255 / 82%);
-  font-size: 0.8rem;
-  font-weight: 800;
-}
-
-.network-node-one {
-  top: 8%;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.network-node-two {
-  right: 5%;
-  bottom: 20%;
-}
-
-.network-node-three {
-  bottom: 20%;
-  left: 5%;
+.landing-note {
+  margin: 0;
+  color: rgb(255 255 255 / 46%);
+  font-size: 0.78rem;
 }
 
 .eyebrow {
@@ -485,6 +420,12 @@ button:disabled {
     var(--background);
 }
 
+.auth-page {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 100svh;
+}
+
 .auth-topbar,
 .onboarding-header {
   display: flex;
@@ -515,7 +456,8 @@ button:disabled {
 
 .auth-card {
   width: min(31rem, 100%);
-  margin: clamp(2rem, 6vh, 4.5rem) auto;
+  align-self: center;
+  margin: clamp(1.5rem, 4vh, 3rem) auto clamp(3rem, 9vh, 6rem);
   padding: clamp(1.5rem, 5vw, 2.5rem);
   border: 1px solid var(--border);
   border-radius: 1.5rem;
@@ -529,13 +471,13 @@ button:disabled {
 
 .auth-title {
   margin: 0;
-  font-size: clamp(2rem, 6vw, 3rem);
+  font-size: clamp(2rem, 5vw, 2.6rem);
   line-height: 1.04;
   letter-spacing: -0.045em;
 }
 
 .auth-description {
-  margin: 1rem 0 2rem;
+  margin: 0.75rem 0 1.75rem;
   color: var(--muted);
   line-height: 1.65;
 }
@@ -1874,32 +1816,22 @@ button:disabled {
   }
 
   .landing-hero {
-    grid-template-columns: 1fr;
-    min-height: calc(100svh - 6.25rem);
-    align-content: center;
-    gap: 2rem;
-    padding: 2rem 1.25rem 2.5rem;
+    padding: 2rem 1.25rem 5rem;
   }
 
   .landing-content {
-    justify-items: center;
-    gap: 1.35rem;
-    text-align: center;
+    gap: 1.25rem;
   }
 
   .landing-content h1 {
-    max-width: 9ch;
-    font-size: clamp(3.35rem, 17vw, 5rem);
+    max-width: 12ch;
+    font-size: clamp(2.8rem, 13vw, 4rem);
   }
 
   .landing-actions {
     display: grid;
     width: min(22rem, 100%);
     grid-template-columns: 1fr;
-  }
-
-  .landing-visual {
-    width: min(14rem, 62vw);
   }
 
   .feature-grid {
@@ -1916,12 +1848,32 @@ button:disabled {
 
   .auth-page,
   .onboarding-page {
-    padding: 1rem;
+    padding: max(0.9rem, env(safe-area-inset-top)) max(0.9rem, env(safe-area-inset-right)) max(0.9rem, env(safe-area-inset-bottom)) max(0.9rem, env(safe-area-inset-left));
   }
 
   .auth-card {
-    margin-top: 1.75rem;
-    padding: 1.25rem;
+    margin: 1.25rem auto 2.5rem;
+    padding: 1.4rem;
+    border-radius: 1.25rem;
+  }
+
+  .auth-topbar {
+    min-height: 3rem;
+  }
+
+  .auth-title {
+    font-size: 2rem;
+  }
+
+  .auth-description {
+    margin-bottom: 1.4rem;
+  }
+
+  .field input,
+  .inline-field input,
+  .phone-field input,
+  .submit-button {
+    min-height: 3.25rem;
   }
 
   .registration-progress {

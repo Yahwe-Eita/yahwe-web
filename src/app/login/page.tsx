@@ -6,7 +6,12 @@ export const metadata: Metadata = { title: "Welcome Back" };
 
 export default function LoginPage() {
   return (
-    <AuthShell backHref="/" title="Welcome Back">
+    <AuthShell
+      backHref="/"
+      eyebrow="Member access"
+      title="Welcome back"
+      description="Log in to continue to your account."
+    >
       <LoginForm />
     </AuthShell>
   );
