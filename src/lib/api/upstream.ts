@@ -20,11 +20,21 @@ export async function apiRequest<T>(
   path: string,
   { token, headers, ...init }: ApiRequestOptions = {},
 ): Promise<T> {
-  const baseUrl = process.env.YAHWE_API_URL;
+  const baseUrl = process.env.YAHWE_API_URL?.trim();
   if (!baseUrl) {
-    throw new Error("YAHWE_API_URL is not configured.");
+    throw new UpstreamError("The server API connection is not configured.", 503);
   }
-  const url = new URL(`${baseUrl.replace(/\/$/, "")}/${path.replace(/^\//, "")}`);
+
+  let url: URL;
+  try {
+    url = new URL(`${baseUrl.replace(/\/$/, "")}/${path.replace(/^\//, "")}`);
+  } catch {
+    throw new UpstreamError("The server API connection is not configured.", 503);
+  }
+
+  if (url.protocol !== "https:" && process.env.NODE_ENV === "production") {
+    throw new UpstreamError("The server API connection is not configured.", 503);
+  }
   const requestHeaders = new Headers(headers);
 
   requestHeaders.set("Accept", "application/json");

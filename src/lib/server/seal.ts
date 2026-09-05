@@ -6,6 +6,7 @@ import {
   createHash,
   randomBytes,
 } from "node:crypto";
+import { RequestError } from "@/lib/server/request";
 
 const DEVELOPMENT_SECRET = "yahwe-eita-local-development-only";
 
@@ -13,9 +14,7 @@ function key() {
   const secret = process.env.SESSION_SECRET;
 
   if (process.env.NODE_ENV === "production" && (!secret || secret.length < 32)) {
-    throw new Error(
-      "SESSION_SECRET must contain at least 32 characters in production.",
-    );
+    throw new RequestError("The server session is not configured.", 503);
   }
 
   return createHash("sha256")

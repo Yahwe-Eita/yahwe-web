@@ -31,5 +31,9 @@ export function errorResponse(error: unknown) {
       ? error.message
       : "The request could not be completed.";
 
+  if (status >= 500) {
+    console.error("[Yahwe API route]", error);
+  }
+
   return Response.json({ message }, { status });
 }
