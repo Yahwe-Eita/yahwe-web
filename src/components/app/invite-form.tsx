@@ -1,42 +1,34 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { useState, type FormEvent } from "react";
 import { FormMessage } from "@/components/form-message";
 import { SubmitButton } from "@/components/submit-button";
-import { requestJson } from "@/lib/client-api";
+import { useInvite } from "@/hooks/useInvite";
+import { getErrorMessage } from "@/lib/error-message";
 
 export function InviteForm() {
-  const router = useRouter();
+  const invite = useInvite();
   const [open, setOpen] = useState(false);
-  const [pending, setPending] = useState(false);
-  const [message, setMessage] = useState("");
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setPending(true);
-    setMessage("");
+    invite.reset();
     const form = new FormData(event.currentTarget);
 
     try {
-      await requestJson("/api/invites", {
-        method: "POST",
-        body: JSON.stringify({ name: form.get("name"), phone: form.get("phone") }),
+      await invite.mutateAsync({
+        name: String(form.get("name") ?? ""),
+        phone: String(form.get("phone") ?? ""),
       });
       setOpen(false);
-      router.refresh();
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Invitation failed.");
-    } finally {
-      setPending(false);
-    }
+    } catch {}
   }
 
   return (
     <>
       <button className="primary-action" type="button" onClick={() => setOpen(true)}>
-        Invite someone
+        Enter name and phone number
       </button>
       <AnimatePresence>
         {open ? (
@@ -60,8 +52,7 @@ export function InviteForm() {
           >
             <div className="modal-heading">
               <div>
-                <p className="eyebrow">New invitation</p>
-                <h2 id="invite-title">Invite a downline</h2>
+                <h2 id="invite-title">Enter name and phone number</h2>
               </div>
               <button className="icon-button" type="button" onClick={() => setOpen(false)} aria-label="Close">
                 ×
@@ -69,17 +60,20 @@ export function InviteForm() {
             </div>
             <form className="form-stack" onSubmit={submit}>
               <label className="field">
-                <span>Full name</span>
+                <span className="sr-only">Name</span>
                 <input name="name" autoComplete="name" required />
               </label>
               <label className="field">
-                <span>Phone number</span>
+                <span className="sr-only">Phone</span>
                 <input name="phone" type="tel" inputMode="numeric" autoComplete="tel" required />
               </label>
-              <FormMessage message={message} />
-              <SubmitButton pending={pending} pendingLabel="Sending…">
-                Send invitation
+              <FormMessage message={invite.error ? getErrorMessage(invite.error, "Invitation failed.") : undefined} />
+              <SubmitButton pending={invite.isPending} pendingLabel="Sending…">
+                Submit
               </SubmitButton>
+              <button className="small-button" type="button" onClick={() => setOpen(false)}>
+                Cancel
+              </button>
             </form>
           </motion.section>
         </motion.div>

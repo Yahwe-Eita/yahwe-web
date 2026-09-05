@@ -1,6 +1,6 @@
 import "server-only";
 
-class RequestError extends Error {
+export class RequestError extends Error {
   public readonly expose = true;
 
   constructor(message: string, public readonly status: number) {

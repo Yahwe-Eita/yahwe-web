@@ -1,20 +1,23 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FormMessage } from "@/components/form-message";
+import { RegistrationProgress } from "@/components/auth/registration-progress";
 import { SubmitButton } from "@/components/submit-button";
-import { requestJson } from "@/lib/client-api";
-
-interface PaymentResult {
-  status: "complete" | "pending";
-}
+import { usePaymentStatus } from "@/hooks/usePaymentStatus";
+import { useRegister } from "@/hooks/useRegister";
+import { getErrorMessage } from "@/lib/error-message";
 
 export function PaymentStatus({ reference }: { reference?: string }) {
   const router = useRouter();
-  const [seconds, setSeconds] = useState(15);
-  const [pending, setPending] = useState(false);
-  const [message, setMessage] = useState("");
+  const paymentStatus = usePaymentStatus(reference);
+  const completeRegistration = useRegister(false);
+  const [seconds, setSeconds] = useState(5);
+  const [done, setDone] = useState(false);
+  const [isStillPending, setIsStillPending] = useState(false);
+  const { mutateAsync: getPaymentStatus, reset: resetPaymentStatus } = paymentStatus;
+  const { reset: resetRegistration } = completeRegistration;
 
   useEffect(() => {
     if (seconds <= 0) return;
@@ -22,52 +25,69 @@ export function PaymentStatus({ reference }: { reference?: string }) {
     return () => window.clearTimeout(timer);
   }, [seconds]);
 
-  async function checkStatus() {
-    setPending(true);
-    setMessage("");
+  const checkStatus = useCallback(async () => {
+    resetPaymentStatus();
+    resetRegistration();
     try {
-      const result = await requestJson<PaymentResult>(
-        "/api/registration/payment-status",
-        { method: "POST" },
-      );
-      if (result.status === "complete") {
-        router.replace("/dashboard");
-        router.refresh();
+      const result = await getPaymentStatus();
+      if (result.status === "COMPLETED") {
+        setDone(true);
         return;
       }
-      setMessage("Payment is still pending. Approve it and try again.");
-      setSeconds(15);
-    } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Status check failed.",
-      );
-    } finally {
-      setPending(false);
-    }
+      setIsStillPending(true);
+      setSeconds(5);
+    } catch {}
+  }, [getPaymentStatus, resetPaymentStatus, resetRegistration]);
+
+  useEffect(() => {
+    if (seconds !== 0 || done || paymentStatus.isPending) return;
+    const timer = window.setTimeout(() => void checkStatus(), 0);
+    return () => window.clearTimeout(timer);
+  }, [checkStatus, done, paymentStatus.isPending, seconds]);
+
+  async function proceed() {
+    completeRegistration.reset();
+    try {
+      await completeRegistration.mutateAsync();
+      router.replace("/dashboard");
+      router.refresh();
+    } catch {}
   }
 
   return (
     <div className="form-stack">
+      <RegistrationProgress currentStep={5} />
       <div className="payment-status-icon" aria-hidden="true">
         ₵
       </div>
+      <h2>{done ? "Payment Confirmed" : isStillPending ? "Action Required" : "Awaiting Payment"}</h2>
       <div className="payment-instructions">
-        <p>Approve the Mobile Money request on your phone.</p>
         <p>
-          If no prompt appears, dial <strong>*170#</strong>, open My Wallet,
-          then My Approvals.
+          {done
+            ? "Your payment has been confirmed. Click proceed to complete registration."
+            : isStillPending
+              ? "If you didn't see a payment pop-up, dial *170#, choose 'My Wallet' > 'My Approvals' to approve your transaction manually."
+              : "Your payment is pending. Please authorize the payment on your phone."}
         </p>
-        {reference ? <small>Reference: {reference}</small> : null}
       </div>
-      <FormMessage message={message} tone="info" />
+      {!done ? <p className="payment-auto-check">Auto-checking in {seconds}s...</p> : null}
+      <FormMessage
+        message={
+          paymentStatus.error
+            ? getErrorMessage(paymentStatus.error, "Error checking payment")
+            : completeRegistration.error
+              ? getErrorMessage(completeRegistration.error, "Registration failed.")
+              : undefined
+        }
+        tone="info"
+      />
       <SubmitButton
         type="button"
-        pending={pending}
-        pendingLabel="Checking…"
-        disabled={seconds > 0}
-        onClick={checkStatus}
+        pending={paymentStatus.isPending || completeRegistration.isPending}
+        pendingLabel={done ? "COMPLETE REGISTRATION" : "CHECK PAYMENT STATUS"}
+        onClick={done ? proceed : checkStatus}
       >
-        {seconds > 0 ? `Check status in ${seconds}s` : "Check payment status"}
+        {done ? "COMPLETE REGISTRATION" : "CHECK PAYMENT STATUS"}
       </SubmitButton>
     </div>
   );

@@ -1,54 +1,37 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import type { FormEvent } from "react";
 import { FormMessage } from "@/components/form-message";
 import { SubmitButton } from "@/components/submit-button";
-import { requestJson } from "@/lib/client-api";
+import { useResetPassword } from "@/hooks/useResetPassword";
+import { getErrorMessage } from "@/lib/error-message";
 
 export function ResetPasswordForm() {
-  const [pending, setPending] = useState(false);
-  const [message, setMessage] = useState("");
-  const [sent, setSent] = useState(false);
+  const router = useRouter();
+  const resetPassword = useResetPassword();
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setPending(true);
-    setMessage("");
+    resetPassword.reset();
     const form = new FormData(event.currentTarget);
 
     try {
-      await requestJson("/api/auth/reset-password", {
-        method: "POST",
-        body: JSON.stringify({ email: form.get("email") }),
-      });
-      setSent(true);
-    } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Password reset failed.",
-      );
-    } finally {
-      setPending(false);
-    }
-  }
-
-  if (sent) {
-    return (
-      <FormMessage
-        tone="success"
-        message="Check your inbox for the password reset email."
-      />
-    );
+      const result = await resetPassword.mutateAsync({ email: String(form.get("email") ?? "") });
+      if (!result.pinId) throw new Error("Unable to start reset. Please try again shortly.");
+      router.push(`/reset-password/verify?pinId=${encodeURIComponent(result.pinId)}`);
+    } catch {}
   }
 
   return (
     <form className="form-stack" onSubmit={submit}>
       <label className="field">
-        <span>Email</span>
-        <input name="email" type="email" autoComplete="email" required />
+        <span className="sr-only">Email</span>
+        <input name="email" type="email" autoComplete="email" placeholder="Enter email" required />
       </label>
-      <FormMessage message={message} />
-      <SubmitButton pending={pending} pendingLabel="Sending…">
-        Send reset email
+      <FormMessage message={resetPassword.error ? getErrorMessage(resetPassword.error, "Failed to reset password") : undefined} />
+      <SubmitButton pending={resetPassword.isPending} pendingLabel="Reset Password">
+        Reset Password
       </SubmitButton>
     </form>
   );

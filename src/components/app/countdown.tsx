@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCountdown } from "@/hooks/useCountdown";
 
 function formatRemaining(milliseconds: number) {
   if (milliseconds <= 0) return "00d 00h 00m 00s";
@@ -13,25 +13,20 @@ function formatRemaining(milliseconds: number) {
 }
 
 export function Countdown({
-  createdAt,
-  days,
+  deadline,
+  activeLabel,
+  expiredLabel,
 }: {
-  createdAt?: string;
-  days: number;
+  deadline?: string;
+  activeLabel: string;
+  expiredLabel: string;
 }) {
-  const target = useMemo(() => {
-    const created = createdAt ? new Date(createdAt).getTime() : Number.NaN;
-    return created + days * 24 * 60 * 60 * 1000;
-  }, [createdAt, days]);
-  const [remaining, setRemaining] = useState(() => target - Date.now());
-
-  useEffect(() => {
-    const update = () => setRemaining(target - Date.now());
-    update();
-    const timer = window.setInterval(update, 1000);
-    return () => window.clearInterval(timer);
-  }, [target]);
-
-  if (!Number.isFinite(target)) return <span>Unavailable</span>;
-  return <span>{formatRemaining(remaining)}</span>;
+  const { isAvailable, remaining } = useCountdown(deadline, 0);
+  if (!isAvailable) return null;
+  return (
+    <>
+      <span>{remaining <= 0 ? expiredLabel : `${activeLabel}:`}</span>
+      {remaining > 0 ? <strong>{formatRemaining(remaining)}</strong> : null}
+    </>
+  );
 }

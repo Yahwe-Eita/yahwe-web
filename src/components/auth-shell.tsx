@@ -9,6 +9,7 @@ interface AuthShellProps {
   eyebrow?: string;
   title: string;
   description?: string;
+  wide?: boolean;
 }
 
 export function AuthShell({
@@ -17,6 +18,7 @@ export function AuthShell({
   eyebrow,
   title,
   description,
+  wide = false,
 }: AuthShellProps) {
   return (
     <main className="auth-page">
@@ -24,11 +26,12 @@ export function AuthShell({
         <Logo />
         {backHref ? (
           <Link className="text-link" href={backHref}>
-            ← Back
+            <span aria-hidden="true">←</span>
+            <span className="sr-only">Back</span>
           </Link>
         ) : null}
       </div>
-      <Reveal className="auth-card">
+      <Reveal className={`auth-card${wide ? " auth-card-wide" : ""}`}>
           {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
           <h1 className="auth-title">{title}</h1>
           {description ? <p className="auth-description">{description}</p> : null}

@@ -17,7 +17,7 @@ export function Onboarding() {
       <header className="onboarding-header">
         <Logo />
         <Link className="button button-secondary" href="/login">
-          Sign in
+          Login
         </Link>
       </header>
       <section className="onboarding-card" aria-live="polite">
@@ -29,9 +29,6 @@ export function Onboarding() {
             exit={{ opacity: 0, x: -8 }}
             transition={{ duration: 0.18 }}
           >
-            <p className="eyebrow">
-              Step {index + 1} of {onboardingSlides.length}
-            </p>
             <h1 className="auth-title">{slide.title}</h1>
             <div className="onboarding-copy">
               {slide.body.map((paragraph) => (
@@ -45,27 +42,27 @@ export function Onboarding() {
                   checked={accepted}
                   onChange={(event) => setAccepted(event.target.checked)}
                 />
-                <span>I have read and agree to these terms and conditions.</span>
+                <span>
+                  I agree to the{" "}
+                  <a href="https://yahwe-eitaglobal.tech/terms">Terms and Conditions</a>
+                </span>
               </label>
+            ) : null}
+            {isLast ? (
+              <a href="https://yahwe-eitaglobal.tech/#features">
+                Learn How It Works
+              </a>
             ) : null}
           </motion.div>
         </AnimatePresence>
         <div className="onboarding-actions">
-          <button
-            className="button button-quiet"
-            type="button"
-            disabled={index === 0}
-            onClick={() => setIndex(index - 1)}
-          >
-            Previous
-          </button>
           {isLast ? (
             <Link
               className={`button button-primary ${!accepted ? "link-disabled" : ""}`}
               href={accepted ? "/sponsor" : "#"}
               aria-disabled={!accepted}
             >
-              Create account
+              Get Started
             </Link>
           ) : (
             <button

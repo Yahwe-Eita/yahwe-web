@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { ServiceWorkerRegistration } from "@/components/service-worker-registration";
 import { ThemeInitializer } from "@/components/theme-initializer";
 import { MotionProvider } from "@/components/motion/motion-provider";
+import { QueryProvider } from "@/providers/query-provider";
 import "./globals.css";
 
 const description =
@@ -35,7 +36,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body>
         <ThemeInitializer />
         <ServiceWorkerRegistration />
-        <MotionProvider>{children}</MotionProvider>
+        <QueryProvider>
+          <MotionProvider>{children}</MotionProvider>
+        </QueryProvider>
       </body>
     </html>
   );

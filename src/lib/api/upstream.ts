@@ -1,7 +1,5 @@
 import "server-only";
 
-const DEFAULT_API_URL = "https://api.yahwe-eitaglobal.tech/api";
-
 export class UpstreamError extends Error {
   public readonly expose = true;
 
@@ -22,7 +20,10 @@ export async function apiRequest<T>(
   path: string,
   { token, headers, ...init }: ApiRequestOptions = {},
 ): Promise<T> {
-  const baseUrl = process.env.YAHWE_API_URL ?? DEFAULT_API_URL;
+  const baseUrl = process.env.YAHWE_API_URL;
+  if (!baseUrl) {
+    throw new Error("YAHWE_API_URL is not configured.");
+  }
   const url = new URL(`${baseUrl.replace(/\/$/, "")}/${path.replace(/^\//, "")}`);
   const requestHeaders = new Headers(headers);
 

@@ -10,7 +10,7 @@ function TreeNode({ person }: { person: GenealogyPerson }) {
     <li>
       <div className="tree-person">
         <span>{person.name.charAt(0).toUpperCase()}</span>
-        <strong>{person.name.split("(")[0].trim()}</strong>
+        <strong>{person.name.split("(")[0].trim().split(" ")[0]}</strong>
       </div>
       {children.length ? (
         <ul>
@@ -28,24 +28,22 @@ export function GenealogyTree({ root }: { root: GenealogyPerson }) {
   return (
     <section className="tree-panel">
       <div className="tree-toolbar">
-        <span>Drag or scroll to explore the complete tree.</span>
         <div className="button-row">
           <button
             className="icon-button"
             type="button"
-            aria-label="Zoom out"
-            onClick={() => setScale((value) => Math.max(0.5, value - 0.1))}
+            aria-label="Zoom in"
+            onClick={() => setScale((value) => Math.min(1.6, value + 0.1))}
           >
-            −
+            +
           </button>
-          <strong>{Math.round(scale * 100)}%</strong>
           <button
             className="icon-button"
             type="button"
-            aria-label="Zoom in"
-            onClick={() => setScale((value) => Math.min(1.5, value + 0.1))}
+            aria-label="Zoom out"
+            onClick={() => setScale((value) => Math.max(0.4, value - 0.1))}
           >
-            +
+            −
           </button>
         </div>
       </div>

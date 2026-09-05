@@ -1,17 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { requestJson } from "@/lib/client-api";
+import { useLogout } from "@/hooks/useLogout";
 
 export function LogoutButton() {
   const router = useRouter();
-  const [pending, setPending] = useState(false);
+  const logoutMutation = useLogout();
 
   async function logout() {
-    setPending(true);
     try {
-      await requestJson("/api/auth/logout", { method: "POST" });
+      await logoutMutation.mutateAsync();
     } finally {
       router.replace("/login");
       router.refresh();
@@ -19,8 +17,8 @@ export function LogoutButton() {
   }
 
   return (
-    <button className="logout-button" type="button" onClick={logout} disabled={pending}>
-      {pending ? "Signing out…" : "Sign out"}
+    <button className="logout-button" type="button" onClick={logout} disabled={logoutMutation.isPending}>
+      {logoutMutation.isPending ? "Logout" : "Logout"}
     </button>
   );
 }

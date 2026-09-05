@@ -6,7 +6,7 @@ export function Logo({ href = "/" }: { href?: string }) {
       <span className="brand-mark" aria-hidden="true">
         Y
       </span>
-      <span>Yahwe-Eita</span>
+      <span>YAHWE-EITA</span>
     </Link>
   );
 }

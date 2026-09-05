@@ -7,14 +7,14 @@ export function EmptyState({
   action,
 }: {
   title: string;
-  description: string;
+  description?: string;
   action?: ReactNode;
 }) {
   return (
     <Reveal className="empty-state">
       <span aria-hidden="true">○</span>
       <h2>{title}</h2>
-      <p>{description}</p>
+      {description ? <p>{description}</p> : null}
       {action}
     </Reveal>
   );

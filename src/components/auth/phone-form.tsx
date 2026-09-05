@@ -1,53 +1,60 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FormMessage } from "@/components/form-message";
-import { SubmitButton } from "@/components/submit-button";
-import { requestJson } from "@/lib/client-api";
-
-interface PhoneResult {
-  name: string;
-  phone: string;
-}
+import { useVerifyPhone } from "@/hooks/useVerifyPhone";
+import { getErrorMessage } from "@/lib/error-message";
 
 export function PhoneForm() {
   const router = useRouter();
-  const [pending, setPending] = useState(false);
-  const [message, setMessage] = useState("");
+  const [phone, setPhone] = useState("");
   const [verifiedName, setVerifiedName] = useState("");
+  const [accountExists, setAccountExists] = useState(false);
+  const requestId = useRef(0);
+  const verifyPhone = useVerifyPhone();
+  const { mutateAsync, reset } = verifyPhone;
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setPending(true);
-    setMessage("");
+  useEffect(() => {
+    if (phone.length !== 9) return;
+    const currentRequest = requestId.current;
+
+    const timeout = window.setTimeout(async () => {
+      try {
+        const result = await mutateAsync({ phone });
+        if (currentRequest !== requestId.current) return;
+
+        if (result.accountExists) {
+          setAccountExists(true);
+          return;
+        }
+
+        if (result.name) {
+          setVerifiedName(result.name);
+          router.push("/register/details");
+        }
+      } catch {}
+    }, 250);
+
+    return () => window.clearTimeout(timeout);
+  }, [mutateAsync, phone, router]);
+
+  function updatePhone(value: string) {
+    requestId.current += 1;
+    reset();
     setVerifiedName("");
-    const form = new FormData(event.currentTarget);
-
-    try {
-      const result = await requestJson<PhoneResult>(
-        "/api/registration/verify-phone",
-        {
-          method: "POST",
-          body: JSON.stringify({ phone: form.get("phone") }),
-        },
-      );
-      setVerifiedName(result.name);
-    } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Phone verification failed.",
-      );
-    } finally {
-      setPending(false);
-    }
+    setAccountExists(false);
+    const digits = value.replace(/\D/g, "");
+    setPhone((digits.startsWith("0") ? digits.slice(1) : digits).slice(0, 9));
   }
 
   return (
     <div className="form-stack">
-      <div className="network-badge">MTN Mobile Money</div>
-      <form className="form-stack" onSubmit={submit}>
+      <div className="network-badge">MTN MOBILE MONEY</div>
+      <div className="form-stack">
         <label className="field">
-          <span>Your Mobile Money number</span>
+          <span>Phone Number</span>
           <div className="phone-field">
             <span aria-hidden="true">+233</span>
             <input
@@ -55,33 +62,38 @@ export function PhoneForm() {
               type="tel"
               inputMode="numeric"
               autoComplete="tel"
+              placeholder="Enter phone number"
+              value={phone}
+              onChange={(event) => updatePhone(event.target.value)}
               minLength={9}
-              maxLength={10}
+              maxLength={9}
               required
             />
           </div>
+          <small>Enter 9 digits without the leading 0</small>
         </label>
-        <FormMessage message={message} />
-        {verifiedName ? (
+        <FormMessage message={verifyPhone.error ? getErrorMessage(verifyPhone.error, "Verification failed. Try again later") : undefined} />
+        {accountExists ? (
+          <div className="account-exists-panel" role="status">
+            <strong>An account with this number already exists.</strong>
+            <Link className="small-button" href="/login">
+              Sign In Instead
+            </Link>
+          </div>
+        ) : verifiedName ? (
           <div className="verified-panel" role="status">
-            <span>Verified account</span>
             <strong>{verifiedName}</strong>
           </div>
         ) : null}
-        {verifiedName ? (
-          <button
-            className="submit-button"
-            type="button"
-            onClick={() => router.push("/register/details")}
-          >
-            Continue
-          </button>
-        ) : (
-          <SubmitButton pending={pending} pendingLabel="Verifying…">
-            Verify number
-          </SubmitButton>
-        )}
-      </form>
+        <button
+          className="submit-button"
+          type="button"
+          disabled={!verifiedName || verifyPhone.isPending || accountExists}
+          onClick={() => router.push("/register/details")}
+        >
+          CONTINUE
+        </button>
+      </div>
     </div>
   );
 }

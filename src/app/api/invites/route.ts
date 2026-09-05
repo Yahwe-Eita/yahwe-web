@@ -1,7 +1,21 @@
+import type { ApiEnvelope, InvitedUser } from "@/lib/api/types";
 import { apiRequest } from "@/lib/api/upstream";
+import { requireApiSession } from "@/lib/server/api-session";
 import { assertSameOrigin, errorResponse } from "@/lib/server/request";
 import { getSession } from "@/lib/server/session";
 import { ghanaPhoneField, isRecord, textField } from "@/lib/validation";
+
+export async function GET() {
+  try {
+    const session = await requireApiSession();
+    const response = await apiRequest<ApiEnvelope<InvitedUser[]>>("/invites", {
+      token: session.accessToken,
+    });
+    return Response.json(response.data ?? []);
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
 
 export async function POST(request: Request) {
   try {

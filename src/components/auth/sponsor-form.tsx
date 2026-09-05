@@ -4,45 +4,29 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { FormMessage } from "@/components/form-message";
 import { SubmitButton } from "@/components/submit-button";
-import { requestJson } from "@/lib/client-api";
-
-interface SponsorResult {
-  sponsor: { name: string; phone: string };
-}
+import { useSponsor } from "@/hooks/useSponsor";
+import { getErrorMessage } from "@/lib/error-message";
 
 export function SponsorForm() {
   const router = useRouter();
-  const [pending, setPending] = useState(false);
-  const [message, setMessage] = useState("");
+  const sponsor = useSponsor();
+  const [phone, setPhone] = useState("");
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setPending(true);
-    setMessage("");
+    sponsor.reset();
     const form = new FormData(event.currentTarget);
 
     try {
-      await requestJson<SponsorResult>(
-        "/api/registration/sponsor",
-        {
-          method: "POST",
-          body: JSON.stringify({ phone: form.get("phone") }),
-        },
-      );
+      await sponsor.mutateAsync(String(form.get("phone") ?? ""));
       router.push("/sponsor/confirmation");
-    } catch (error) {
-      setMessage(
-        error instanceof Error ? error.message : "Sponsor verification failed.",
-      );
-    } finally {
-      setPending(false);
-    }
+    } catch {}
   }
 
   return (
     <form className="form-stack" onSubmit={submit}>
       <label className="field">
-        <span>Sponsor phone number</span>
+        <span>Sponsor&apos;s Phone Number</span>
         <div className="phone-field">
           <span aria-hidden="true">+233</span>
           <input
@@ -50,17 +34,28 @@ export function SponsorForm() {
             type="tel"
             inputMode="numeric"
             autoComplete="tel"
-            placeholder="24 000 0000"
+            placeholder="Enter phone number"
+            value={phone}
+            onChange={(event) => {
+              const digits = event.target.value.replace(/\D/g, "");
+              setPhone((digits.startsWith("0") ? digits.slice(1) : digits).slice(0, 9));
+            }}
             minLength={9}
-            maxLength={10}
+            maxLength={9}
             required
           />
         </div>
-        <small>Enter the number with or without the leading zero.</small>
+        <small>Enter 9 digits without the leading 0</small>
       </label>
-      <FormMessage message={message} />
-      <SubmitButton pending={pending} pendingLabel="Verifying…">
-        Verify sponsor
+      <FormMessage
+        message={
+          sponsor.error
+            ? getErrorMessage(sponsor.error, "Network error")
+            : undefined
+        }
+      />
+      <SubmitButton pending={sponsor.isPending} pendingLabel="VERIFY SPONSOR">
+        VERIFY SPONSOR
       </SubmitButton>
     </form>
   );

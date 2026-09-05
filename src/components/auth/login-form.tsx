@@ -2,44 +2,36 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import type { FormEvent } from "react";
 import { FormMessage } from "@/components/form-message";
 import { SubmitButton } from "@/components/submit-button";
-import { requestJson } from "@/lib/client-api";
+import { useLogin } from "@/hooks/useLogin";
+import { getErrorMessage } from "@/lib/error-message";
 
 export function LoginForm() {
   const router = useRouter();
-  const [pending, setPending] = useState(false);
-  const [message, setMessage] = useState("");
+  const login = useLogin();
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setPending(true);
-    setMessage("");
+    login.reset();
     const form = new FormData(event.currentTarget);
 
     try {
-      await requestJson("/api/auth/login", {
-        method: "POST",
-        body: JSON.stringify({
-          email: form.get("email"),
-          password: form.get("password"),
-        }),
+      await login.mutateAsync({
+        email: String(form.get("email") ?? ""),
+        password: String(form.get("password") ?? ""),
       });
       router.replace("/dashboard");
       router.refresh();
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Login failed.");
-    } finally {
-      setPending(false);
-    }
+    } catch {}
   }
 
   return (
     <form className="form-stack" onSubmit={submit}>
       <label className="field">
         <span>Email</span>
-        <input name="email" type="email" autoComplete="email" required />
+        <input name="email" type="email" autoComplete="email" placeholder="Enter your email" required />
       </label>
       <label className="field">
         <span>Password</span>
@@ -47,6 +39,7 @@ export function LoginForm() {
           name="password"
           type="password"
           autoComplete="current-password"
+          placeholder="Enter your password"
           required
         />
       </label>
@@ -55,9 +48,9 @@ export function LoginForm() {
           Forgot password?
         </Link>
       </div>
-      <FormMessage message={message} />
-      <SubmitButton pending={pending} pendingLabel="Signing in…">
-        Sign in
+      <FormMessage message={login.error ? getErrorMessage(login.error, "Wrong email or password.") : undefined} />
+      <SubmitButton pending={login.isPending} pendingLabel="Login">
+        Login
       </SubmitButton>
     </form>
   );

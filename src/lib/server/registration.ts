@@ -19,14 +19,14 @@ export interface RegistrationPayload {
   channel: string;
   sponsorId: number;
   feeId: string;
-  platform: "WEB";
+  platform: "IOS" | "ANDROID";
 }
 
 export interface RegistrationState {
   sponsorId: number;
   sponsorName: string;
   sponsorPhone: string;
-  accessToken: string;
+  accessToken?: string;
   verifiedName?: string;
   verifiedPhone?: string;
   channel?: string;
@@ -62,13 +62,13 @@ export async function clearRegistration() {
   store.set(REGISTRATION_COOKIE, "", { ...cookieOptions, maxAge: 0 });
 }
 
-export async function completeRegistration(state: RegistrationState) {
+export async function completeRegistration(state: RegistrationState, again = false) {
   if (!state.pending || !state.feeReference) {
     throw new Error("The registration session is incomplete.");
   }
 
   const response = await apiRequest<{ data?: AuthPayload }>(
-    "/auth/register?validate_only=false&again=false",
+    `/auth/register?validate_only=false&again=${again}`,
     {
       method: "POST",
       token: state.accessToken,

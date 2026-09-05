@@ -28,13 +28,14 @@ export async function getSession(): Promise<Session | null> {
 
 export async function setSession(auth: AuthPayload) {
   const id = auth.user.userId ?? auth.user.id;
-  if (!auth.access_token || !id || !auth.user.name || !auth.user.email) {
+  const accessToken = auth.accessToken ?? auth.access_token;
+  if (!accessToken || !id || !auth.user.name || !auth.user.email) {
     throw new Error("The authentication response is incomplete.");
   }
 
   const session: Session = {
-    accessToken: auth.access_token,
-    refreshToken: auth.refresh_token,
+    accessToken,
+    refreshToken: auth.refreshToken ?? auth.refresh_token,
     user: {
       id,
       name: auth.user.name,

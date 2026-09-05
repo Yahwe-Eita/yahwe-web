@@ -1,70 +1,45 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
-import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
-
-const benefits = [
-  {
-    title: "Invite with confidence",
-    description: "Grow your network and keep every referral in one place.",
-  },
-  {
-    title: "Track your progress",
-    description: "See your level, active downlines, and remaining time clearly.",
-  },
-  {
-    title: "Understand your rewards",
-    description: "Review airtime, cash earnings, and transaction history.",
-  },
-];
+import { Reveal } from "@/components/motion/reveal";
 
 export default function HomePage() {
   return (
-    <main>
-      <section className="hero">
-        <nav className="nav" aria-label="Main navigation">
+    <main className="landing-page">
+      <div className="landing-shell">
+        <nav className="landing-nav" aria-label="Main navigation">
           <Logo />
-          <Link className="button button-secondary" href="/login">
-            Sign in
-          </Link>
         </nav>
 
-        <Reveal className="hero-content">
-          <p className="eyebrow">Your network. Your progress.</p>
-          <h1>Build your community and track every reward.</h1>
-          <p className="hero-copy">
-            A simple, secure way to manage referrals, follow your progress,
-            and understand your earnings from any device.
-          </p>
-          <Link className="button button-primary" href="/onboarding">
-            Get started
-          </Link>
-        </Reveal>
-      </section>
+        <section className="landing-hero">
+          <Reveal className="landing-content">
+            <div className="landing-dots" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+            <h1>Create Account</h1>
+            <div className="landing-actions">
+              <Link className="button button-primary" href="/onboarding">
+                CREATE AN ACCOUNT
+              </Link>
+              <Link className="button button-secondary" href="/login">
+                LOGIN
+              </Link>
+            </div>
+          </Reveal>
 
-      <section
-        className="features"
-        id="features"
-        aria-labelledby="features-title"
-      >
-        <div className="section-heading">
-          <p className="eyebrow">Everything in one place</p>
-          <h2 id="features-title">Designed to stay clear and useful.</h2>
-        </div>
-
-        <Stagger className="feature-grid">
-          {benefits.map((benefit, index) => (
-            <StaggerItem key={benefit.title}>
-              <article className="feature-card">
-                <span className="feature-number" aria-hidden="true">
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <h3>{benefit.title}</h3>
-                <p>{benefit.description}</p>
-              </article>
-            </StaggerItem>
-          ))}
-        </Stagger>
-      </section>
+          <Reveal className="landing-visual" delay={0.08}>
+            <div className="network-orbit network-orbit-outer" aria-hidden="true">
+              <span className="network-node network-node-one">1</span>
+              <span className="network-node network-node-two">2</span>
+              <span className="network-node network-node-three">3</span>
+            </div>
+            <div className="network-orbit network-orbit-inner" aria-hidden="true" />
+            <div className="network-center" aria-hidden="true">Y</div>
+          </Reveal>
+        </section>
+      </div>
     </main>
   );
 }

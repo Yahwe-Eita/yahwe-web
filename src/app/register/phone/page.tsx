@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AuthShell } from "@/components/auth-shell";
 import { PhoneForm } from "@/components/auth/phone-form";
+import { RegistrationProgress } from "@/components/auth/registration-progress";
 import { getRegistration } from "@/lib/server/registration";
 
-export const metadata: Metadata = { title: "Verify Mobile Money" };
+export const metadata: Metadata = { title: "Enter your MTN MoMo number" };
 
 export default async function RegisterPhonePage() {
   const registration = await getRegistration();
@@ -13,10 +14,10 @@ export default async function RegisterPhonePage() {
   return (
     <AuthShell
       backHref="/sponsor"
-      eyebrow="Account setup"
-      title="Verify your MTN MoMo number"
-      description="Enter the number without the international country code."
+      title="Enter your MTN MoMo number"
+      description="Enter your MTN MobileMoney number without the leading 0"
     >
+      <RegistrationProgress currentStep={2} />
       <PhoneForm />
     </AuthShell>
   );
