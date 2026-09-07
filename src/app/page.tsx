@@ -13,7 +13,7 @@ export default function HomePage() {
         <section className="landing-hero">
           <Reveal className="landing-content">
             <p className="landing-eyebrow">Welcome to Yahwe-Eita</p>
-            <h1>Grow together.<br />Move forward.</h1>
+            <h1>Be Forwardly and Upwardly Mobile, in your Finances</h1>
             <p className="landing-copy">
               Join your community, build your network, and keep track of your
               progress in one simple place.

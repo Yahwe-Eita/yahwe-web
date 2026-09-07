@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { FormMessage } from "@/components/form-message";
 import { SubmitButton } from "@/components/submit-button";
 import { useLogin } from "@/hooks/useLogin";
@@ -11,6 +11,7 @@ import { getErrorMessage } from "@/lib/error-message";
 export function LoginForm() {
   const router = useRouter();
   const login = useLogin();
+  const [showPassword, setShowPassword] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -35,13 +36,23 @@ export function LoginForm() {
       </label>
       <label className="field">
         <span>Password</span>
-        <input
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          placeholder="Enter your password"
-          required
-        />
+        <div className="password-field">
+          <input
+            name="password"
+            type={showPassword ? "text" : "password"}
+            autoComplete="current-password"
+            placeholder="Enter your password"
+            required
+          />
+          <button
+            type="button"
+            className="password-toggle"
+            onClick={() => setShowPassword((visible) => !visible)}
+            aria-label={`${showPassword ? "Hide" : "Show"} password`}
+          >
+            {showPassword ? "Hide" : "Show"}
+          </button>
+        </div>
       </label>
       <div className="form-row form-row-end">
         <Link className="text-link" href="/reset-password">

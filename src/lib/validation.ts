@@ -1,3 +1,5 @@
+import { getUnmetPasswordRequirement } from "@/lib/password";
+
 export class ValidationError extends Error {
   public readonly status = 400;
   public readonly expose = true;
@@ -50,11 +52,9 @@ export function ghanaPhoneField(value: unknown) {
 
 export function passwordField(value: unknown) {
   const password = textField(value, "Password");
-  if (password.length < 8) {
-    throw new ValidationError("Password must contain at least 8 characters.");
-  }
-  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-    throw new ValidationError("Password must contain at least one symbol.");
+  const unmetRequirement = getUnmetPasswordRequirement(password);
+  if (unmetRequirement) {
+    throw new ValidationError(unmetRequirement.message);
   }
   return password;
 }

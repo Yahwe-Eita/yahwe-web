@@ -32,13 +32,12 @@ export function PhoneForm() {
 
         if (result.name) {
           setVerifiedName(result.name);
-          router.push("/register/details");
         }
       } catch {}
     }, 250);
 
     return () => window.clearTimeout(timeout);
-  }, [mutateAsync, phone, router]);
+  }, [mutateAsync, phone]);
 
   function updatePhone(value: string) {
     requestId.current += 1;
@@ -82,7 +81,10 @@ export function PhoneForm() {
           </div>
         ) : verifiedName ? (
           <div className="verified-panel" role="status">
-            <strong>{verifiedName}</strong>
+            <div>
+              <span>Verified account name</span>
+              <strong>{verifiedName}</strong>
+            </div>
           </div>
         ) : null}
         <button

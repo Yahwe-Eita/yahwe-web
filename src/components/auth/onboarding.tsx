@@ -44,13 +44,21 @@ export function Onboarding() {
                 />
                 <span>
                   I agree to the{" "}
-                  <a href="https://yahwe-eitaglobal.tech/terms">Terms and Conditions</a>
+                  <a href="https://yahwe-eitaglobal.tech/terms">
+                    Terms and Conditions
+                  </a>
                 </span>
               </label>
             ) : null}
             {isLast ? (
-              <a href="https://yahwe-eitaglobal.tech/#features">
+              <a
+                href="https://yahwe-eitaglobal.tech"
+                className="external-link"
+                target="_blank"
+                rel="noreferrer"
+              >
                 Learn How It Works
+                <span aria-hidden="true">↗</span>
               </a>
             ) : null}
           </motion.div>
