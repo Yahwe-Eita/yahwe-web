@@ -144,7 +144,10 @@ export function RegistrationForm({
           {passwordRequirements.map((requirement) => {
             const isMet = requirement.test(password);
             return (
-              <li className={isMet ? "requirement-met" : ""} key={requirement.id}>
+              <li
+                className={isMet ? "requirement-met" : ""}
+                key={requirement.id}
+              >
                 <span aria-hidden="true">{isMet ? "✓" : "○"}</span>
                 {requirement.label}
               </li>
