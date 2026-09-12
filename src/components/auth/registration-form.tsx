@@ -126,8 +126,8 @@ export function RegistrationForm({
               placeholder="Create a password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              minLength={8}
-              aria-describedby="password-requirements"
+              // minLength={8}
+              // aria-describedby="password-requirements"
               required
             />
             <button
@@ -140,7 +140,7 @@ export function RegistrationForm({
             </button>
           </div>
         </label>
-        <ul className="password-requirements" id="password-requirements">
+        {/* <ul className="password-requirements" id="password-requirements">
           {passwordRequirements.map((requirement) => {
             const isMet = requirement.test(password);
             return (
@@ -153,7 +153,7 @@ export function RegistrationForm({
               </li>
             );
           })}
-        </ul>
+        </ul> */}
         <FormMessage
           message={
             message ||
