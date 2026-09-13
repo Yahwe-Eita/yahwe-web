@@ -9,6 +9,15 @@ import { usePaymentStatus } from "@/hooks/usePaymentStatus";
 import { useRegister } from "@/hooks/useRegister";
 import { getErrorMessage } from "@/lib/error-message";
 
+const MAX_POLL_ATTEMPTS = 24; // ~3 minutes with backoff
+const BASE_INTERVAL = 5; // Start at 5 seconds
+const MAX_INTERVAL = 20; // Cap at 20 seconds
+
+const getNextInterval = (attempt: number) => {
+  const interval = Math.min(BASE_INTERVAL * Math.pow(1.3, attempt), MAX_INTERVAL);
+  return Math.round(interval);
+};
+
 export function PaymentStatus({ reference }: { reference?: string }) {
   const router = useRouter();
   const paymentStatus = usePaymentStatus(reference);
@@ -16,43 +25,69 @@ export function PaymentStatus({ reference }: { reference?: string }) {
   const [seconds, setSeconds] = useState(5);
   const [done, setDone] = useState(false);
   const [isStillPending, setIsStillPending] = useState(false);
-  const { mutateAsync: getPaymentStatus, reset: resetPaymentStatus } = paymentStatus;
-  const { reset: resetRegistration } = completeRegistration;
-
-  useEffect(() => {
-    if (seconds <= 0) return;
-    const timer = window.setTimeout(() => setSeconds(seconds - 1), 1000);
-    return () => window.clearTimeout(timer);
-  }, [seconds]);
+  const [pollAttempts, setPollAttempts] = useState(0);
+  const [statusError, setStatusError] = useState<string | null>(null);
 
   const checkStatus = useCallback(async () => {
-    resetPaymentStatus();
-    resetRegistration();
+    if (done) return;
+    setStatusError(null);
     try {
-      const result = await getPaymentStatus();
-      if (result.status === "COMPLETED") {
+      const result = await paymentStatus.mutateAsync();
+      const status = (
+        result?.status ??
+        (typeof result === "string" ? result : "")
+      ).toUpperCase();
+
+      if (status === "COMPLETED") {
         setDone(true);
         return;
       }
-      setIsStillPending(true);
-      setSeconds(5);
-    } catch {}
-  }, [getPaymentStatus, resetPaymentStatus, resetRegistration]);
 
+      if (status === "PROCESSING") {
+        setIsStillPending(true);
+      }
+    } catch (err: unknown) {
+      setStatusError(getErrorMessage(err, "Error checking payment status"));
+    } finally {
+      setPollAttempts((prev) => {
+        const next = prev + 1;
+        setSeconds(getNextInterval(next));
+        return next;
+      });
+    }
+  }, [done, paymentStatus]);
+
+  // Countdown timer for auto-polling
   useEffect(() => {
-    if (seconds !== 0 || done || paymentStatus.isPending) return;
-    const timer = window.setTimeout(() => void checkStatus(), 0);
+    if (done || pollAttempts >= MAX_POLL_ATTEMPTS) return;
+    if (seconds <= 0) return;
+    const timer = window.setTimeout(() => setSeconds((prev) => prev - 1), 1000);
     return () => window.clearTimeout(timer);
-  }, [checkStatus, done, paymentStatus.isPending, seconds]);
+  }, [done, pollAttempts, seconds]);
+
+  // Auto-poll when countdown hits 0
+  useEffect(() => {
+    if (done || pollAttempts >= MAX_POLL_ATTEMPTS || seconds !== 0 || paymentStatus.isPending) {
+      return;
+    }
+    void checkStatus();
+  }, [checkStatus, done, paymentStatus.isPending, pollAttempts, seconds]);
 
   async function proceed() {
-    completeRegistration.reset();
+    setStatusError(null);
     try {
       await completeRegistration.mutateAsync();
       router.replace("/dashboard");
       router.refresh();
-    } catch {}
+    } catch (err: unknown) {
+      setStatusError(getErrorMessage(err, "Registration failed."));
+    }
   }
+
+  const handleManualCheck = () => {
+    if (paymentStatus.isPending) return;
+    void checkStatus();
+  };
 
   return (
     <div className="form-stack">
@@ -70,25 +105,33 @@ export function PaymentStatus({ reference }: { reference?: string }) {
               : "Your payment is pending. Please authorize the payment on your phone."}
         </p>
       </div>
-      {!done ? <p className="payment-auto-check">Auto-checking in {seconds}s...</p> : null}
+      {!done ? (
+        <p className="payment-auto-check">
+          {pollAttempts >= MAX_POLL_ATTEMPTS
+            ? "Auto-check stopped. Use the button below to check manually."
+            : `Auto-checking in ${seconds}s...`}
+        </p>
+      ) : null}
       <FormMessage
         message={
-          paymentStatus.error
+          statusError ??
+          (paymentStatus.error
             ? getErrorMessage(paymentStatus.error, "Error checking payment")
             : completeRegistration.error
               ? getErrorMessage(completeRegistration.error, "Registration failed.")
-              : undefined
+              : undefined)
         }
-        tone="info"
+        tone={statusError ? "error" : "info"}
       />
       <SubmitButton
         type="button"
         pending={paymentStatus.isPending || completeRegistration.isPending}
-        pendingLabel={done ? "COMPLETE REGISTRATION" : "CHECK PAYMENT STATUS"}
-        onClick={done ? proceed : checkStatus}
+        pendingLabel={done ? "COMPLETE REGISTRATION" : "CHECKING PAYMENT STATUS..."}
+        onClick={done ? proceed : handleManualCheck}
       >
         {done ? "COMPLETE REGISTRATION" : "CHECK PAYMENT STATUS"}
       </SubmitButton>
     </div>
   );
 }
+

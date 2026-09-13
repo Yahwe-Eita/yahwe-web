@@ -27,7 +27,7 @@ export async function POST(request: Request) {
         channel: payload.channel,
       }),
     });
-    const reference = fee.data?.reference;
+    const reference = fee.data?.reference ?? (fee as any)?.reference;
     if (!reference) throw new Error("The payment reference was not returned.");
     await setRegistration({ ...state, feeReference: reference });
     return Response.json(fee);

@@ -1,29 +1,44 @@
-import type { ApiEnvelope } from "@/lib/api/types";
 import { apiRequest } from "@/lib/api/upstream";
-import { getRegistration } from "@/lib/server/registration";
+import { getRegistration, setRegistration } from "@/lib/server/registration";
 import { errorResponse } from "@/lib/server/request";
-
-interface FeeStatus {
-  status?: string;
-}
 
 export async function GET(request: Request) {
   try {
     const state = await getRegistration();
-    if (!state?.feeReference || !state.pending) {
-      return Response.json({ message: "Payment session expired. Please register again." }, { status: 409 });
-    }
-
     const requestedReference = new URL(request.url).searchParams.get("reference");
-    if (requestedReference && requestedReference !== state.feeReference) {
-      return Response.json({ message: "Invalid payment reference." }, { status: 400 });
+    const reference = requestedReference || state?.feeReference;
+
+    if (!reference) {
+      return Response.json(
+        { message: "Payment session expired. Please register again." },
+        { status: 409 },
+      );
     }
 
-    const query = new URLSearchParams({ reference: state.feeReference });
-    const response = await apiRequest<ApiEnvelope<FeeStatus>>(`/fee/status?${query}`, {
-      token: state.accessToken,
+    if (state && !state.feeReference && reference) {
+      await setRegistration({ ...state, feeReference: reference });
+    }
+
+    const query = new URLSearchParams({ reference });
+    const response = await apiRequest<any>(`/fee/status?${query}`, {
+      token: state?.accessToken,
     });
-    return Response.json(response.data ?? { status: "PENDING" });
+
+    // Mobile checks: data?.data?.status === "COMPLETED" || "PROCESSING"
+    // Handle any upstream response structure safely
+    let rawStatus: string | undefined;
+    if (typeof response === "string") {
+      rawStatus = response;
+    } else if (response && typeof response === "object") {
+      rawStatus =
+        response.data?.status ??
+        response.data?.data?.status ??
+        (typeof response.data === "string" ? response.data : undefined) ??
+        (typeof response.status === "string" ? response.status : undefined);
+    }
+
+    const status = (rawStatus || "PENDING").toUpperCase();
+    return Response.json({ status, raw: response });
   } catch (error) {
     return errorResponse(error);
   }
