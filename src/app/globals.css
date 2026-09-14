@@ -458,7 +458,7 @@ button:disabled {
 
 .text-link {
   color: var(--brand);
-  font-size: 0.9rem;
+  font-size: 1.2rem;
   font-weight: 700;
 }
 
@@ -869,10 +869,11 @@ button:disabled {
 
 .confirmation-description {
   margin: 0 0 1.25rem;
-  color: var(--muted);
+  color: #000000;
   font-size: 0.9rem;
   line-height: 1.6;
   text-align: center;
+  z-index: 99999;
 }
 
 .credentials-card {
