@@ -1,26 +1,32 @@
-export function formatCurrency(value?: number) {
-  return new Intl.NumberFormat("en-GH", {
-    style: "currency",
-    currency: "GHS",
-    minimumFractionDigits: 2,
-  }).format(Number(value ?? 0));
+import type { Money } from "@/lib/api/types";
+
+const currency = new Intl.NumberFormat("en-GH", {
+  style: "currency",
+  currency: "GHS",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+/** The only place a money amount becomes display text; rounds to 2 places here and nowhere else. */
+export function formatCurrency(value: Money | undefined) {
+  if (value === undefined || value.trim() === "") return "-";
+  const amount = Number(value);
+  return Number.isFinite(amount) ? currency.format(amount) : "-";
 }
 
-export function formatDate(value?: string) {
-  if (!value) return "Unknown date";
+const dateTime = new Intl.DateTimeFormat("en-GH", { dateStyle: "medium", timeStyle: "short" });
+
+export function formatDateTime(value: string | undefined) {
+  if (!value) return "-";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Unknown date";
-  return new Intl.DateTimeFormat("en-GH", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
+  return Number.isNaN(date.getTime()) ? "-" : dateTime.format(date);
 }
 
-export function formatRelativeTime(value?: string) {
-  if (!value) return "Invalid date";
+export function formatRelativeTime(value: string | undefined, now = Date.now()) {
+  if (!value) return "-";
   const timestamp = new Date(value).getTime();
-  if (!Number.isFinite(timestamp)) return "Invalid date";
-  const seconds = Math.round((Date.now() - timestamp) / 1000);
+  if (!Number.isFinite(timestamp)) return "-";
+  const seconds = Math.round((now - timestamp) / 1000);
   if (seconds < 45) return "a few seconds ago";
   if (seconds < 90) return "a minute ago";
   const minutes = Math.round(seconds / 60);

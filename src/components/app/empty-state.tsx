@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { Reveal } from "@/components/motion/reveal";
 
 export function EmptyState({
   title,
@@ -11,11 +10,11 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <Reveal className="empty-state">
+    <div className="empty-state reveal">
       <span aria-hidden="true">○</span>
       <h2>{title}</h2>
       {description ? <p>{description}</p> : null}
       {action}
-    </Reveal>
+    </div>
   );
 }

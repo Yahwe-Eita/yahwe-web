@@ -17,8 +17,10 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-Set `SESSION_SECRET` to a random value containing at least 32 characters before
-deploying. It protects the encrypted authentication and registration cookies.
+Set `SESSION_SECRET` to a random value containing at least 32 characters, in
+every environment including local development. It protects the encrypted
+authentication and registration cookies; without it the app refuses to serve
+signed-in or registration pages.
 Set the server-only `YAHWE_API_URL` to the Yahwe-Eita API base URL, including
 its `/api` prefix. Keep the real value in `.env.local` locally and in your
 deployment provider's environment settings in production.
@@ -30,8 +32,12 @@ URL so the landing page contact form can deliver messages.
 ```bash
 npm run lint
 npx tsc --noEmit
+npm test
 npm run build
 ```
+
+Route handler tests run against a fake upstream API (`tests/upstream.ts`), so
+they need no running backend.
 
 ## Architecture
 
@@ -42,14 +48,20 @@ npm run build
 - One typed query or mutation hook per application endpoint
 - Progressive Web App manifest and install icons
 - Offline fallback without caching private account data
-- Secure, server-only API proxy and encrypted HTTP-only sessions
+- Secure, server-only API proxy and encrypted HTTP-only sessions; an expired
+  access token is refreshed once on the server, and a rejected refresh ends the
+  session
+- Programme figures (fee, rewards, windows, minimum age) come from the API's
+  `/programme` endpoint; no money figure is written into the client
+- Icons are bundled from `src/components/icons/mingcute.json`; add an icon there
+  before using it
 
 ## Application routes
 
 - `/` — landing page: about, rewards, how it works, terms, FAQ, and contact
 - `/onboarding` — introduction and terms
 - `/sponsor` — sponsor verification
-- `/register/*` — Mobile Money, identity, registration, and payment flow
+- `/register/*` — Mobile Money number confirmed by SMS code, details, and payment
 - `/login` and `/reset-password` — account access
 - `/dashboard` — rewards, cycle progress, and invitations
 - `/genealogy` — downline list and tree

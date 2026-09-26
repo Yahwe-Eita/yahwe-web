@@ -2,100 +2,132 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useState, type FormEvent } from "react";
 import { FormMessage } from "@/components/form-message";
+import { SubmitButton } from "@/components/submit-button";
+import { useResendCode } from "@/hooks/useResendCode";
+import { useVerifyCode } from "@/hooks/useVerifyCode";
 import { useVerifyPhone } from "@/hooks/useVerifyPhone";
 import { getErrorMessage } from "@/lib/error-message";
+import { localPhoneDigits } from "@/lib/validation";
 
 export function PhoneForm() {
   const router = useRouter();
   const [phone, setPhone] = useState("");
-  const [verifiedName, setVerifiedName] = useState("");
-  const [accountExists, setAccountExists] = useState(false);
-  const requestId = useRef(0);
+  const [code, setCode] = useState("");
   const verifyPhone = useVerifyPhone();
-  const { mutateAsync, reset } = verifyPhone;
+  const verifyCode = useVerifyCode();
+  const resendCode = useResendCode();
+  const lookup = verifyPhone.data;
+  const codeSent = lookup?.accountExists === false;
 
-  useEffect(() => {
-    if (phone.length !== 9) return;
-    const currentRequest = requestId.current;
+  function changePhone(value: string) {
+    verifyPhone.reset();
+    verifyCode.reset();
+    resendCode.reset();
+    setCode("");
+    setPhone(localPhoneDigits(value));
+  }
 
-    const timeout = window.setTimeout(async () => {
-      try {
-        const result = await mutateAsync({ phone });
-        if (currentRequest !== requestId.current) return;
+  function findNumber(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    verifyPhone.mutate(phone);
+  }
 
-        if (result.accountExists) {
-          setAccountExists(true);
-          return;
-        }
-
-        if (result.name) {
-          setVerifiedName(result.name);
-        }
-      } catch {}
-    }, 250);
-
-    return () => window.clearTimeout(timeout);
-  }, [mutateAsync, phone]);
-
-  function updatePhone(value: string) {
-    requestId.current += 1;
-    reset();
-    setVerifiedName("");
-    setAccountExists(false);
-    const digits = value.replace(/\D/g, "");
-    setPhone((digits.startsWith("0") ? digits.slice(1) : digits).slice(0, 9));
+  function confirmCode(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    verifyCode.mutate(code, { onSuccess: () => router.push("/register/details") });
   }
 
   return (
     <div className="form-stack">
-      <div className="network-badge">MTN MOBILE MONEY</div>
-      <div className="form-stack">
+      <div className="network-badge">MTN Mobile Money</div>
+      <form className="form-stack" onSubmit={findNumber}>
         <label className="field">
-          <span>Phone Number</span>
+          <span>Your MoMo number</span>
           <div className="phone-field">
             <span aria-hidden="true">+233</span>
             <input
               name="phone"
               type="tel"
               inputMode="numeric"
-              autoComplete="tel"
-              placeholder="Enter phone number"
+              autoComplete="tel-national"
+              placeholder="241234567"
               value={phone}
-              onChange={(event) => updatePhone(event.target.value)}
-              minLength={9}
-              maxLength={9}
+              onChange={(event) => changePhone(event.target.value)}
+              pattern="\d{9}"
+              readOnly={codeSent}
               required
             />
           </div>
-          <small>Enter 9 digits without the leading 0</small>
+          <small>9 digits, without the leading 0</small>
         </label>
-        <FormMessage message={verifyPhone.error ? getErrorMessage(verifyPhone.error, "Verification failed. Try again later") : undefined} />
-        {accountExists ? (
+        <FormMessage
+          message={verifyPhone.error ? getErrorMessage(verifyPhone.error, "This number could not be checked. Please try again.") : undefined}
+        />
+        {lookup?.accountExists ? (
           <div className="account-exists-panel" role="status">
-            <strong>An account with this number already exists.</strong>
+            <strong>This number already has an account.</strong>
             <Link className="small-button" href="/login">
-              Sign In Instead
+              Log in
             </Link>
           </div>
-        ) : verifiedName ? (
+        ) : null}
+        {codeSent ? null : (
+          <SubmitButton pending={verifyPhone.isPending} pendingLabel="Checking…" disabled={phone.length !== 9}>
+            Send code
+          </SubmitButton>
+        )}
+      </form>
+
+      {codeSent ? (
+        <form className="form-stack" onSubmit={confirmCode}>
           <div className="verified-panel" role="status">
             <div>
-              <span>Verified account name</span>
-              <strong>{verifiedName}</strong>
+              <span>MoMo account name</span>
+              <strong>{lookup.name}</strong>
             </div>
           </div>
-        ) : null}
-        <button
-          className="submit-button"
-          type="button"
-          disabled={!verifiedName || verifyPhone.isPending || accountExists}
-          onClick={() => router.push("/register/details")}
-        >
-          CONTINUE
-        </button>
-      </div>
+          <label className="field">
+            <span>Code sent to +{lookup.phone}</span>
+            <input
+              name="code"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              value={code}
+              onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+              pattern="\d{6}"
+              required
+            />
+          </label>
+          <FormMessage
+            message={
+              verifyCode.error
+                ? getErrorMessage(verifyCode.error, "That code did not work. Please try again.")
+                : resendCode.error
+                  ? getErrorMessage(resendCode.error, "The code could not be sent. Please try again.")
+                  : undefined
+            }
+          />
+          <FormMessage tone="success" message={resendCode.isSuccess ? "A new code is on its way." : undefined} />
+          <SubmitButton pending={verifyCode.isPending} pendingLabel="Checking…" disabled={code.length !== 6}>
+            Continue
+          </SubmitButton>
+          <div className="button-row">
+            <button
+              className="small-button"
+              type="button"
+              disabled={resendCode.isPending}
+              onClick={() => resendCode.mutate()}
+            >
+              Resend code
+            </button>
+            <button className="small-button small-button-muted" type="button" onClick={() => changePhone("")}>
+              Change number
+            </button>
+          </div>
+        </form>
+      ) : null}
     </div>
   );
 }

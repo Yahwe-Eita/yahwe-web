@@ -1,21 +1,15 @@
 "use client";
 
 import { useEffect } from "react";
+import { applyTheme, readThemePreference } from "@/lib/theme";
 
+/** Follows the device setting while the member's preference is "system". */
 export function ThemeInitializer() {
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
-
-    function apply() {
-      const saved = window.localStorage.getItem("yahwe-theme");
-      const dark = saved === "dark" || (saved !== "light" && media.matches);
-      document.documentElement.dataset.theme = dark ? "dark" : "light";
-    }
-
-    apply();
-    media.addEventListener("change", apply);
-    return () => media.removeEventListener("change", apply);
+    const follow = () => applyTheme(readThemePreference());
+    media.addEventListener("change", follow);
+    return () => media.removeEventListener("change", follow);
   }, []);
-
   return null;
 }

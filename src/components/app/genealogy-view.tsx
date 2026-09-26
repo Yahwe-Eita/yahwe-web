@@ -7,46 +7,48 @@ import { QueryError, QueryLoading } from "@/components/app/query-state";
 import { Stagger, StaggerItem } from "@/components/motion/reveal";
 import { useGenealogy } from "@/hooks/useGenealogy";
 
-export function GenealogyView() {
+export function GenealogyView({ depthLimit }: { depthLimit: number }) {
   const genealogy = useGenealogy();
-  if (genealogy.isPending) return <QueryLoading />;
-  if (genealogy.error) return <QueryError error={genealogy.error} retry={() => genealogy.refetch()} title="Couldn't load genealogy" fallback="Please try again." retryLabel="Retry" />;
+  const heading = (
+    <PageHeading
+      title="Genealogy"
+      action={
+        <Link className="primary-action" href="/genealogy/tree">
+          View tree
+        </Link>
+      }
+    />
+  );
 
-  const recruits = genealogy.data?.user.recruits ?? [];
+  if (genealogy.isPending) return <>{heading}<QueryLoading /></>;
+  if (genealogy.error) return <>{heading}<QueryError error={genealogy.error} retry={() => genealogy.refetch()} /></>;
+
+  const recruits = genealogy.data.user.recruits;
   return (
     <>
-      <PageHeading
-        title="Genealogy"
-        action={
-          <div className="button-row">
-            <Link className="primary-action" href="/genealogy/tree">VIEW TREE</Link>
-          </div>
-        }
-      />
+      {heading}
       {recruits.length ? (
         <Stagger className="list-grid">
-          {recruits.map((recruit, index) => {
-            const windowClosed = recruit.recruitWindowClosed === true || recruit.recruitWindowClosed === "true";
-            const inactive = recruit.active === false;
-            return (
-              <StaggerItem key={recruit.id ?? `${recruit.name}-${index}`}>
-                <article className="member-row">
-                  <span className="person-avatar">{recruit.name.charAt(0).toUpperCase()}</span>
-                  <div><small>Downline</small><strong>{recruit.name}</strong></div>
-                  <span className={`status-pill ${inactive || windowClosed ? "status-inactive" : "status-active"}`}>
-                    {inactive ? "Suspended" : windowClosed ? "Window closed" : "Recruiting"}
-                  </span>
-                </article>
-              </StaggerItem>
-            );
-          })}
+          {recruits.map((recruit) => (
+            <StaggerItem key={recruit.id}>
+              <article className="member-row">
+                <span className="person-avatar" aria-hidden="true">
+                  {recruit.name.charAt(0).toUpperCase()}
+                </span>
+                <strong>{recruit.name}</strong>
+                <span className={`status-pill ${!recruit.active || recruit.recruitWindowClosed ? "status-inactive" : "status-active"}`}>
+                  {!recruit.active ? "Inactive" : recruit.recruitWindowClosed ? "Window closed" : "Recruiting"}
+                </span>
+              </article>
+            </StaggerItem>
+          ))}
         </Stagger>
       ) : (
-        <EmptyState title="No genealogy data yet." description="You haven't invited anyone yet." />
+        <EmptyState title="No downlines yet" description="Invite someone to start building your network." />
       )}
       {genealogy.data.isTruncated ? (
         <p className="form-message form-message-info">
-          Your tree runs deeper than the 8 levels shown here. Levels beyond the eighth do not earn rewards.
+          Your network goes deeper than the {depthLimit} levels that earn rewards. Only those levels are shown.
         </p>
       ) : null}
     </>

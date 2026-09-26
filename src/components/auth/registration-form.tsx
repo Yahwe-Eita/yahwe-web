@@ -1,16 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { FormMessage } from "@/components/form-message";
+import { PasswordRequirements } from "@/components/auth/password-requirements";
 import { SubmitButton } from "@/components/submit-button";
-import { useRegister } from "@/hooks/useRegister";
-import { useFee } from "@/hooks/useFee";
-import { getErrorMessage } from "@/lib/error-message";
-import {
-  getUnmetPasswordRequirement,
-  passwordRequirements,
-} from "@/lib/password";
 import {
   Dialog,
   DialogClose,
@@ -20,19 +14,32 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useFee } from "@/hooks/useFee";
+import { useValidateRegistration } from "@/hooks/useValidateRegistration";
+import type { Money } from "@/lib/api/types";
+import { getErrorMessage } from "@/lib/error-message";
+import { formatCurrency } from "@/lib/format";
+import { getUnmetPasswordRequirement } from "@/lib/password";
+
+function savedDetailsMessage(email: string, password: string) {
+  return `Your Yahwe-Eita login details\n\nEmail: ${email}\nPassword: ${password}\n\nKeep this private. Anyone with these details can log in to your account.`;
+}
 
 export function RegistrationForm({
   fullName,
   phone,
+  feeAmount,
+  latestBirthDate,
 }: {
   fullName: string;
   phone: string;
+  feeAmount: Money;
+  latestBirthDate: string;
 }) {
   const router = useRouter();
-  const validateRegistration = useRegister(true);
-  const completeRegistration = useRegister(false);
+  const validateRegistration = useValidateRegistration();
   const fee = useFee();
-  const [birthDate, setBirthDate] = useState("");
+  const paying = useRef(false);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [credentials, setCredentials] = useState({ email: "", password: "" });
@@ -40,157 +47,116 @@ export function RegistrationForm({
   const [showSaveDetails, setShowSaveDetails] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
+  function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
     const data = new FormData(event.currentTarget);
-    const submittedPassword = String(data.get("password") ?? "");
-    const unmetRequirement = getUnmetPasswordRequirement(submittedPassword);
-    if (unmetRequirement) {
-      setMessage(unmetRequirement.message);
+    const unmet = getUnmetPasswordRequirement(password);
+    if (unmet) {
+      setMessage(unmet.message);
       return;
     }
-    setCredentials({
+    const input = {
       email: String(data.get("email") ?? ""),
-      password: submittedPassword,
-    });
-    setShowSaveDetails(true);
-  }
-
-  async function startPayment() {
-    const payload = {
-      email: credentials.email,
-      password: credentials.password,
-      dateOfBirth: birthDate,
+      password,
+      dateOfBirth: String(data.get("dateOfBirth") ?? ""),
     };
-
-    validateRegistration.reset();
-    fee.reset();
-    completeRegistration.reset();
-    try {
-      await validateRegistration.mutateAsync(payload);
-      const feeResult = await fee.mutateAsync();
-
-      if (
-        feeResult.status === false &&
-        feeResult.message === "You already have a fee"
-      ) {
-        await completeRegistration.mutateAsync();
-        router.replace("/dashboard");
-        router.refresh();
-        return;
-      }
-
-      router.push("/register/payment");
-    } catch {}
+    validateRegistration.mutate(input, {
+      onSuccess: () => {
+        setCredentials({ email: input.email, password: input.password });
+        setShowSaveDetails(true);
+      },
+    });
   }
+
+  function startPayment() {
+    if (paying.current) return;
+    paying.current = true;
+    fee.mutate(undefined, {
+      onSuccess: (result) => {
+        if (result.outcome === "registered") {
+          router.replace("/dashboard");
+          router.refresh();
+          return;
+        }
+        router.push("/register/payment");
+      },
+      onError: () => {
+        paying.current = false;
+      },
+    });
+  }
+
+  const busy = validateRegistration.isPending || fee.isPending || fee.isSuccess;
+  const details = savedDetailsMessage(credentials.email, credentials.password);
+  const feeLabel = `Pay ${formatCurrency(feeAmount)} for airtime`;
 
   return (
     <>
-      <form id="registration-form" className="form-stack" onSubmit={submit}>
+      <form className="form-stack" onSubmit={submit}>
         <label className="field">
-          <span>Full Name</span>
-          <input value={fullName} disabled />
+          <span>Full name</span>
+          <input value={fullName} readOnly />
         </label>
         <label className="field">
-          <span>Phone Number</span>
-          <input value={phone} disabled />
+          <span>Phone number</span>
+          <input value={`+${phone}`} readOnly />
         </label>
         <label className="field">
-          <span>Kindly enter your date of birth</span>
-          <input
-            name="dateOfBirth"
-            type="date"
-            value={birthDate}
-            onChange={(event) => setBirthDate(event.target.value)}
-            required
-          />
+          <span>Date of birth</span>
+          <input name="dateOfBirth" type="date" max={latestBirthDate} required />
         </label>
         <label className="field">
-          <span>Email Address</span>
-          <input
-            name="email"
-            type="email"
-            autoComplete="email"
-            placeholder="Enter your email"
-            required
-          />
+          <span>Email address</span>
+          <input name="email" type="email" autoComplete="email" placeholder="you@example.com" required />
         </label>
-        <label className="field">
-          <span>Password</span>
+        <div className="field">
+          <label htmlFor="new-password">Password</label>
           <div className="password-field">
             <input
+              id="new-password"
               name="password"
               type={showPassword ? "text" : "password"}
               autoComplete="new-password"
-              placeholder="Create a password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              // minLength={8}
-              // aria-describedby="password-requirements"
+              minLength={8}
+              aria-describedby="password-requirements"
               required
             />
             <button
               type="button"
               className="password-toggle"
               onClick={() => setShowPassword((visible) => !visible)}
-              aria-label={`${showPassword ? "Hide" : "Show"} password`}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-pressed={showPassword}
             >
               {showPassword ? "Hide" : "Show"}
             </button>
           </div>
-        </label>
-        {/* <ul className="password-requirements" id="password-requirements">
-          {passwordRequirements.map((requirement) => {
-            const isMet = requirement.test(password);
-            return (
-              <li
-                className={isMet ? "requirement-met" : ""}
-                key={requirement.id}
-              >
-                <span aria-hidden="true">{isMet ? "✓" : "○"}</span>
-                {requirement.label}
-              </li>
-            );
-          })}
-        </ul> */}
+        </div>
+        <PasswordRequirements id="password-requirements" password={password} />
         <FormMessage
           message={
             message ||
             (validateRegistration.error
-              ? getErrorMessage(
-                  validateRegistration.error,
-                  "Registration validation failed.",
-                )
-              : undefined) ||
-            (fee.error
-              ? getErrorMessage(fee.error, "Payment request failed.")
-              : undefined) ||
-            (completeRegistration.error
-              ? getErrorMessage(
-                  completeRegistration.error,
-                  "Registration failed.",
-                )
+              ? getErrorMessage(validateRegistration.error, "Your details could not be checked. Please try again.")
               : undefined)
           }
         />
-        <SubmitButton
-          pending={validateRegistration.isPending}
-          pendingLabel="CREATE ACCOUNT"
-        >
-          CREATE ACCOUNT
+        <SubmitButton pending={validateRegistration.isPending} pendingLabel="Checking…">
+          Create account
         </SubmitButton>
       </form>
+
       <Dialog open={showSaveDetails} onOpenChange={setShowSaveDetails}>
         <DialogContent>
           <DialogHeader>
             <span className="dialog-icon" aria-hidden="true">
               ✓
             </span>
-            <DialogTitle>Save Your Login Details</DialogTitle>
-            <DialogDescription>
-              Please save these details. You will need them to log in.
-            </DialogDescription>
+            <DialogTitle>Save your login details</DialogTitle>
+            <DialogDescription>You will need these to log in.</DialogDescription>
           </DialogHeader>
           <div className="credentials-card">
             <small>Email</small>
@@ -198,19 +164,14 @@ export function RegistrationForm({
             <small>Password</small>
             <strong>{credentials.password}</strong>
           </div>
-          <p className="warning-text">
-            Take a screenshot or send the details to yourself below.
-          </p>
+          <p className="warning-text">Take a screenshot or send the details to yourself.</p>
           <div className="credential-actions">
-            <a
-              className="small-button"
-              href={`sms:${phone}?body=${encodeURIComponent(`Your Yahwe-Eita login details\n\nEmail: ${credentials.email}\nPassword: ${credentials.password}\n\nKeep this private — anyone with these can sign in to your account.`)}`}
-            >
+            <a className="small-button" href={`sms:+${phone}?body=${encodeURIComponent(details)}`}>
               Save to SMS
             </a>
             <a
               className="small-button whatsapp-button"
-              href={`https://wa.me/${phone}?text=${encodeURIComponent(`Your Yahwe-Eita login details\n\nEmail: ${credentials.email}\nPassword: ${credentials.password}\n\nKeep this private — anyone with these can sign in to your account.`)}`}
+              href={`https://wa.me/${phone}?text=${encodeURIComponent(details)}`}
               target="_blank"
               rel="noreferrer"
             >
@@ -226,40 +187,43 @@ export function RegistrationForm({
                 setShowPayment(true);
               }}
             >
-              I&apos;ve Saved My Details
+              I&apos;ve saved them
             </button>
             <DialogClose asChild>
               <button className="small-button" type="button">
-                Go Back
+                Go back
               </button>
             </DialogClose>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog open={showPayment} onOpenChange={setShowPayment}>
+
+      <Dialog open={showPayment} onOpenChange={(open) => !busy && setShowPayment(open)}>
         <DialogContent>
           <DialogHeader>
             <span className="dialog-icon dialog-icon-momo" aria-hidden="true">
               ₵
             </span>
-            <DialogTitle>Set up Mobile Money</DialogTitle>
+            <DialogTitle>Pay with Mobile Money</DialogTitle>
+            <DialogDescription>
+              A payment request will appear on +{phone}. Approve it with your MoMo PIN.
+            </DialogDescription>
           </DialogHeader>
-          <label className="field">
-            <span>Phone Number</span>
-            <input value={phone} disabled />
-          </label>
+          <FormMessage
+            message={fee.error ? getErrorMessage(fee.error, "The payment could not be started. Please try again.") : undefined}
+          />
           <DialogFooter>
             <SubmitButton
               type="button"
-              pending={fee.isPending || completeRegistration.isPending}
-              pendingLabel="Pay GHS 150 for Airtime"
+              pending={busy}
+              pendingLabel="Starting payment…"
               onClick={startPayment}
               className="network-badge"
             >
-              Pay GHS 150 for Airtime
+              {feeLabel}
             </SubmitButton>
             <DialogClose asChild>
-              <button className="small-button" type="button">
+              <button className="small-button" type="button" disabled={busy}>
                 Cancel
               </button>
             </DialogClose>

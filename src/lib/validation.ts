@@ -1,8 +1,10 @@
+import { HttpError } from "@/lib/http-error";
 import { getUnmetPasswordRequirement } from "@/lib/password";
 
-export class ValidationError extends Error {
-  public readonly status = 400;
-  public readonly expose = true;
+export class ValidationError extends HttpError {
+  constructor(message: string) {
+    super(message, 400);
+  }
 }
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
@@ -36,14 +38,19 @@ export function emailField(value: unknown) {
   return email;
 }
 
-export function ghanaPhoneField(value: unknown) {
-  const digits = textField(value, "Phone number").replace(/\D/g, "");
-  const local = digits.startsWith("233")
-    ? digits.slice(3)
-    : digits.startsWith("0")
-      ? digits.slice(1)
-      : digits;
+function stripCountryPrefix(digits: string) {
+  if (digits.startsWith("233")) return digits.slice(3);
+  if (digits.startsWith("0")) return digits.slice(1);
+  return digits;
+}
 
+/** Reduces typed input to at most the 9 local digits, dropping a leading 0 or 233. */
+export function localPhoneDigits(value: string) {
+  return stripCountryPrefix(value.replace(/\D/g, "")).slice(0, 9);
+}
+
+export function ghanaPhoneField(value: unknown) {
+  const local = stripCountryPrefix(textField(value, "Phone number").replace(/\D/g, ""));
   if (!/^\d{9}$/.test(local)) {
     throw new ValidationError("Enter a valid 9-digit Ghana phone number.");
   }
@@ -69,14 +76,5 @@ export function dateField(value: unknown) {
   if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date) {
     throw new ValidationError("Enter a valid date of birth.");
   }
-
-  const today = new Date();
-  const minimumBirthDate = new Date(
-    Date.UTC(today.getUTCFullYear() - 18, today.getUTCMonth(), today.getUTCDate()),
-  );
-  if (parsed > minimumBirthDate) {
-    throw new ValidationError("You must be at least 18 years old to register.");
-  }
-
   return date;
 }

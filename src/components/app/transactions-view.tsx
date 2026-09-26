@@ -1,42 +1,80 @@
 "use client";
 
+import { useState } from "react";
 import { EmptyState } from "@/components/app/empty-state";
 import { PageHeading } from "@/components/app/page-heading";
 import { QueryError, QueryLoading } from "@/components/app/query-state";
-import { Stagger, StaggerItem } from "@/components/motion/reveal";
 import { useTransactions } from "@/hooks/useTransactions";
-import { formatRelativeTime } from "@/lib/format";
+import type { TransactionStatus, TransactionType } from "@/lib/api/types";
+import { formatCurrency, formatDateTime } from "@/lib/format";
+
+const typeLabels: Record<TransactionType, string> = {
+  AIRTIME: "Airtime reward",
+  CASH: "Cash reward",
+  REVENUE: "Payment",
+};
+
+const statusLabels: Record<TransactionStatus, string> = {
+  PENDING: "Pending",
+  PROCESSING: "Processing",
+  COMPLETED: "Completed",
+  FAILED: "Failed",
+};
 
 export function TransactionsView() {
-  const transactionsQuery = useTransactions();
-  if (transactionsQuery.isPending) return <QueryLoading />;
-  if (transactionsQuery.error) return <QueryError error={transactionsQuery.error} retry={() => transactionsQuery.refetch()} />;
+  const [page, setPage] = useState(1);
+  const query = useTransactions(page);
+  const heading = <PageHeading title="Transactions" />;
 
-  const { transactions } = transactionsQuery.data;
+  if (query.isPending) return <>{heading}<QueryLoading /></>;
+  if (query.error) return <>{heading}<QueryError error={query.error} retry={() => query.refetch()} /></>;
+
+  const { transactions, total, pageSize } = query.data;
+  const pages = Math.max(1, Math.ceil(total / pageSize));
+
   return (
     <>
-      <PageHeading title="Transaction History" />
+      {heading}
       {transactions.length ? (
-        <Stagger className="transaction-list">
-          {transactions.map((transaction) => (
-            <StaggerItem key={transaction.id}>
-              <article className="transaction-row">
-                <span className={`transaction-icon ${transaction.type === "AIRTIME" ? "airtime" : "cash"}`}>{transaction.type === "AIRTIME" ? "A" : "₵"}</span>
+        <>
+          <ul className="transaction-list" aria-busy={query.isPlaceholderData || undefined}>
+            {transactions.map((transaction) => (
+              <li className="transaction-row" key={transaction.id}>
+                <span className={`transaction-icon ${transaction.type === "AIRTIME" ? "airtime" : "cash"}`} aria-hidden="true">
+                  {transaction.type === "AIRTIME" ? "A" : "₵"}
+                </span>
                 <div className="transaction-main">
-                  <strong>{transaction.type}</strong>
-                  <span>{transaction.description}</span>
-                  <small>{formatRelativeTime(transaction.createdAt)} · {transaction.reference}</small>
+                  <strong>{typeLabels[transaction.type]}</strong>
+                  {transaction.description ? <span>{transaction.description}</span> : null}
+                  <small>
+                    <time dateTime={transaction.createdAt}>{formatDateTime(transaction.createdAt)}</time>
+                  </small>
                 </div>
                 <div className="transaction-value">
-                  <strong>GH₵ {transaction.amount}</strong>
-                  <span className={`status-pill status-${(transaction.status ?? "pending").toLowerCase()}`}>{transaction.status ?? "Pending"}</span>
+                  <strong>{formatCurrency(transaction.amount)}</strong>
+                  <span className={`status-pill status-${transaction.status.toLowerCase()}`}>
+                    {statusLabels[transaction.status]}
+                  </span>
                 </div>
-              </article>
-            </StaggerItem>
-          ))}
-        </Stagger>
+              </li>
+            ))}
+          </ul>
+          {pages > 1 ? (
+            <nav className="pagination" aria-label="Transaction pages">
+              <button className="small-button" type="button" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+                Newer
+              </button>
+              <span>
+                Page {page} of {pages}
+              </span>
+              <button className="small-button" type="button" disabled={page >= pages} onClick={() => setPage(page + 1)}>
+                Older
+              </button>
+            </nav>
+          ) : null}
+        </>
       ) : (
-        <EmptyState title="No transaction yet." description="You haven't invited anyone yet." />
+        <EmptyState title="No transactions yet" description="Your rewards and payments will appear here." />
       )}
     </>
   );

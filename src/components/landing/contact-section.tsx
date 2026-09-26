@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, type ChangeEvent, type FormEvent } from "react";
-import { Icon } from "@iconify/react";
+import { Icon } from "@/components/icon";
 import { FormMessage } from "@/components/form-message";
 import { SubmitButton } from "@/components/submit-button";
 import { contact } from "@/content/landing";
 import { useContact, type ContactInput } from "@/hooks/useContact";
 import { getErrorMessage } from "@/lib/error-message";
+import { localPhoneDigits } from "@/lib/validation";
 
 const emptyForm: ContactInput = {
   firstName: "",
@@ -21,7 +22,8 @@ export function ContactSection() {
   const sendMessage = useContact();
 
   function update(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
-    setForm({ ...form, [event.target.name]: event.target.value });
+    const { name, value } = event.target;
+    setForm((current) => ({ ...current, [name]: name === "phone" ? localPhoneDigits(value) : value }));
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -30,18 +32,18 @@ export function ContactSection() {
   }
 
   return (
-    <section className="site-section site-split" id="contact">
+    <section className="site-section site-split" id="contact" aria-labelledby="contact-heading">
       <div className="section-heading">
-        <h2>Contact</h2>
+        <h2 id="contact-heading">Contact</h2>
         <ul className="contact-list">
           <li>
-            <Icon icon="mingcute:whatsapp-line" width="22" aria-hidden="true" />
+            <Icon name="mingcute:whatsapp-line" size={22} />
             <span>
               WhatsApp only: <a href={contact.whatsappUrl}>{contact.whatsappDisplay}</a>
             </span>
           </li>
           <li>
-            <Icon icon="mingcute:mail-line" width="22" aria-hidden="true" />
+            <Icon name="mingcute:mail-line" size={22} />
             <span>
               Email: <a href={`mailto:${contact.email}`}>{contact.email}</a>
             </span>
@@ -93,6 +95,7 @@ export function ContactSection() {
               type="tel"
               inputMode="numeric"
               autoComplete="tel-national"
+              pattern="\d{9}"
               required
               value={form.phone}
               onChange={update}
@@ -119,7 +122,7 @@ export function ContactSection() {
         />
         <FormMessage
           tone="success"
-          message={sendMessage.isSuccess ? "Message sent." : undefined}
+          message={sendMessage.isSuccess ? "Message sent. A reply will follow by email or phone." : undefined}
         />
         <SubmitButton type="submit" pending={sendMessage.isPending} pendingLabel="Sending…">
           Send message

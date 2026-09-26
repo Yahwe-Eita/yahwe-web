@@ -1,137 +1,110 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
 import { FormMessage } from "@/components/form-message";
-import { RegistrationProgress } from "@/components/auth/registration-progress";
 import { SubmitButton } from "@/components/submit-button";
-import { usePaymentStatus } from "@/hooks/usePaymentStatus";
-import { useRegister } from "@/hooks/useRegister";
+import { useCompleteRegistration } from "@/hooks/useCompleteRegistration";
+import { useFee } from "@/hooks/useFee";
+import { MAX_STATUS_CHECKS, usePaymentStatus } from "@/hooks/usePaymentStatus";
 import { getErrorMessage } from "@/lib/error-message";
+import { queryKeys } from "@/lib/query-keys";
 
-const MAX_POLL_ATTEMPTS = 24; // ~3 minutes with backoff
-const BASE_INTERVAL = 5; // Start at 5 seconds
-const MAX_INTERVAL = 20; // Cap at 20 seconds
-
-const getNextInterval = (attempt: number) => {
-  const interval = Math.min(BASE_INTERVAL * Math.pow(1.3, attempt), MAX_INTERVAL);
-  return Math.round(interval);
-};
-
-export function PaymentStatus({ reference }: { reference?: string }) {
+export function PaymentStatus({ phone }: { phone: string }) {
   const router = useRouter();
-  const paymentStatus = usePaymentStatus(reference);
-  const completeRegistration = useRegister(false);
-  const [seconds, setSeconds] = useState(5);
-  const [done, setDone] = useState(false);
-  const [isStillPending, setIsStillPending] = useState(false);
-  const [pollAttempts, setPollAttempts] = useState(0);
-  const [statusError, setStatusError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const status = usePaymentStatus();
+  const retryPayment = useFee();
+  const completeRegistration = useCompleteRegistration();
 
-  const checkStatus = useCallback(async () => {
-    if (done) return;
-    setStatusError(null);
-    try {
-      const result = await paymentStatus.mutateAsync();
-      const status = (
-        result?.status ??
-        (typeof result === "string" ? result : "")
-      ).toUpperCase();
+  const current = status.data?.status;
+  const queryState = queryClient.getQueryState(queryKeys.paymentStatus);
+  const checks = (queryState?.dataUpdateCount ?? 0) + (queryState?.errorUpdateCount ?? 0);
+  const stopped = checks >= MAX_STATUS_CHECKS && current !== "COMPLETED" && current !== "FAILED";
 
-      if (status === "COMPLETED") {
-        setDone(true);
-        return;
-      }
-
-      if (status === "PROCESSING") {
-        setIsStillPending(true);
-      }
-    } catch (err: unknown) {
-      setStatusError(getErrorMessage(err, "Error checking payment status"));
-    } finally {
-      setPollAttempts((prev) => {
-        const next = prev + 1;
-        setSeconds(getNextInterval(next));
-        return next;
-      });
-    }
-  }, [done, paymentStatus]);
-
-  // Countdown timer for auto-polling
-  useEffect(() => {
-    if (done || pollAttempts >= MAX_POLL_ATTEMPTS) return;
-    if (seconds <= 0) return;
-    const timer = window.setTimeout(() => setSeconds((prev) => prev - 1), 1000);
-    return () => window.clearTimeout(timer);
-  }, [done, pollAttempts, seconds]);
-
-  // Auto-poll when countdown hits 0
-  useEffect(() => {
-    if (done || pollAttempts >= MAX_POLL_ATTEMPTS || seconds !== 0 || paymentStatus.isPending) {
-      return;
-    }
-    void checkStatus();
-  }, [checkStatus, done, paymentStatus.isPending, pollAttempts, seconds]);
-
-  async function proceed() {
-    setStatusError(null);
-    try {
-      await completeRegistration.mutateAsync();
-      router.replace("/dashboard");
-      router.refresh();
-    } catch (err: unknown) {
-      setStatusError(getErrorMessage(err, "Registration failed."));
-    }
+  function finish() {
+    completeRegistration.mutate(undefined, {
+      onSuccess: () => {
+        router.replace("/dashboard");
+        router.refresh();
+      },
+    });
   }
 
-  const handleManualCheck = () => {
-    if (paymentStatus.isPending) return;
-    void checkStatus();
-  };
+  function tryAgain() {
+    retryPayment.mutate(undefined, {
+      onSuccess: (result) => {
+        if (result.outcome === "registered") {
+          router.replace("/dashboard");
+          router.refresh();
+          return;
+        }
+        void queryClient.resetQueries({ queryKey: queryKeys.paymentStatus });
+      },
+    });
+  }
+
+  const heading =
+    current === "COMPLETED"
+      ? "Payment confirmed"
+      : current === "FAILED"
+        ? "Payment not completed"
+        : current === "PROCESSING"
+          ? "Approve the payment"
+          : "Waiting for payment";
+
+  const guidance =
+    current === "COMPLETED"
+      ? "Finish creating your account to go to your dashboard."
+      : current === "FAILED"
+        ? status.data?.reason ?? "The payment did not go through. No money was taken for this attempt."
+        : current === "PROCESSING"
+          ? "No prompt on your phone? Dial *170#, choose My Wallet, then My Approvals, and approve it there."
+          : `Approve the payment request sent to +${phone} with your MoMo PIN.`;
 
   return (
     <div className="form-stack">
-      <RegistrationProgress currentStep={5} />
       <div className="payment-status-icon" aria-hidden="true">
         ₵
       </div>
-      <h2>{done ? "Payment Confirmed" : isStillPending ? "Action Required" : "Awaiting Payment"}</h2>
-      <div className="payment-instructions">
-        <p>
-          {done
-            ? "Your payment has been confirmed. Click proceed to complete registration."
-            : isStillPending
-              ? "If you didn't see a payment pop-up, dial *170#, choose 'My Wallet' > 'My Approvals' to approve your transaction manually."
-              : "Your payment is pending. Please authorize the payment on your phone."}
-        </p>
+      <div aria-live="polite" className="form-stack">
+        <h2>{heading}</h2>
+        <p className="payment-instructions">{guidance}</p>
+        {stopped ? (
+          <p className="payment-auto-check">
+            Automatic checks have stopped. Check again once you have approved the payment.
+          </p>
+        ) : null}
       </div>
-      {!done ? (
-        <p className="payment-auto-check">
-          {pollAttempts >= MAX_POLL_ATTEMPTS
-            ? "Auto-check stopped. Use the button below to check manually."
-            : `Auto-checking in ${seconds}s...`}
-        </p>
-      ) : null}
       <FormMessage
         message={
-          statusError ??
-          (paymentStatus.error
-            ? getErrorMessage(paymentStatus.error, "Error checking payment")
-            : completeRegistration.error
-              ? getErrorMessage(completeRegistration.error, "Registration failed.")
-              : undefined)
+          status.error
+            ? getErrorMessage(status.error, "The payment status could not be checked.")
+            : retryPayment.error
+              ? getErrorMessage(retryPayment.error, "The payment could not be started. Please try again.")
+              : completeRegistration.error
+                ? getErrorMessage(completeRegistration.error, "Your account could not be created. Please try again.")
+                : undefined
         }
-        tone={statusError ? "error" : "info"}
       />
-      <SubmitButton
-        type="button"
-        pending={paymentStatus.isPending || completeRegistration.isPending}
-        pendingLabel={done ? "COMPLETE REGISTRATION" : "CHECKING PAYMENT STATUS..."}
-        onClick={done ? proceed : handleManualCheck}
-      >
-        {done ? "COMPLETE REGISTRATION" : "CHECK PAYMENT STATUS"}
-      </SubmitButton>
+      {current === "COMPLETED" ? (
+        <SubmitButton type="button" pending={completeRegistration.isPending} pendingLabel="Creating account…" onClick={finish}>
+          Finish registration
+        </SubmitButton>
+      ) : current === "FAILED" ? (
+        <SubmitButton type="button" pending={retryPayment.isPending} pendingLabel="Starting payment…" onClick={tryAgain}>
+          Try again
+        </SubmitButton>
+      ) : (
+        <SubmitButton
+          type="button"
+          pending={status.isFetching}
+          pendingLabel="Checking…"
+          onClick={() => void status.refetch()}
+        >
+          Check payment status
+        </SubmitButton>
+      )}
     </div>
   );
 }
-

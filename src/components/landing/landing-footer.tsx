@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Icon } from "@iconify/react";
+import { Icon } from "@/components/icon";
 import { socialLinks } from "@/content/landing";
 
 export function LandingFooter() {
@@ -12,17 +12,16 @@ export function LandingFooter() {
       <ul className="site-footer-social">
         {socialLinks.map((link) => (
           <li key={link.href}>
-            <a href={link.href} target="_blank" rel="noreferrer">
-              <Icon icon={link.icon} width="20" aria-hidden="true" />
-              <span>{link.label}</span>
+            <a href={link.href} target="_blank" rel="noreferrer" aria-label={link.label}>
+              <Icon name={link.icon} size={22} />
             </a>
           </li>
         ))}
       </ul>
       <div className="site-footer-bottom">
-        <p>&copy; {new Date().getFullYear()} Yahwe-Eita. All rights reserved.</p>
+        <p>Yahwe-Eita. All rights reserved.</p>
         <a href="#top">
-          Back to top <Icon icon="mingcute:arrow-up-line" width="16" aria-hidden="true" />
+          Back to top <Icon name="mingcute:arrow-up-line" size={16} />
         </a>
       </div>
     </footer>

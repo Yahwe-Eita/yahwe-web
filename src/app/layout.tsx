@@ -1,39 +1,35 @@
 import type { Metadata, Viewport } from "next";
+import { MotionProvider } from "@/components/motion/motion-provider";
 import { ServiceWorkerRegistration } from "@/components/service-worker-registration";
 import { ThemeInitializer } from "@/components/theme-initializer";
-import { MotionProvider } from "@/components/motion/motion-provider";
+import { themeBootScript } from "@/lib/theme";
 import { QueryProvider } from "@/providers/query-provider";
 import "./globals.css";
 
-const description =
-  "Manage your Yahwe-Eita referrals, progress, rewards, and transactions.";
-
 export const metadata: Metadata = {
   applicationName: "Yahwe-Eita",
-  title: {
-    default: "Yahwe-Eita",
-    template: "%s | Yahwe-Eita",
-  },
-  description,
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "Yahwe-Eita",
-  },
-  formatDetection: {
-    telephone: false,
-  },
+  title: { default: "Yahwe-Eita", template: "%s | Yahwe-Eita" },
+  description: "Manage your Yahwe-Eita referrals, progress, rewards, and transactions.",
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "Yahwe-Eita" },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
-  colorScheme: "light",
-  themeColor: "#315c35",
+  colorScheme: "light dark",
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#315c35" },
+    { media: "(prefers-color-scheme: dark)", color: "#101512" },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
-      <body suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+      </head>
+      <body>
         <ThemeInitializer />
         <ServiceWorkerRegistration />
         <QueryProvider>

@@ -1,35 +1,25 @@
-const labels = ["Sponsor", "Phone", "Verify", "Details", "Payment"];
+const labels = ["Sponsor", "Phone", "Details", "Payment"] as const;
 
-interface RegistrationProgressProps {
-  currentStep: number;
-}
+export type RegistrationStep = (typeof labels)[number];
 
-export function RegistrationProgress({ currentStep }: RegistrationProgressProps) {
+export function RegistrationProgress({ step }: { step: RegistrationStep }) {
+  const currentStep = labels.indexOf(step) + 1;
   return (
-    <div className="registration-progress" aria-label={`Step ${currentStep} of ${labels.length}`}>
-      <div className="progress-indicators" aria-hidden="true">
+    <div className="registration-progress">
+      <ol className="progress-indicators" aria-label={`Step ${currentStep} of ${labels.length}: ${step}`}>
         {labels.map((label, index) => {
-          const step = index + 1;
-          const completed = step < currentStep;
-          const current = step === currentStep;
-
+          const position = index + 1;
+          const state = position < currentStep ? " completed" : position === currentStep ? " current" : "";
           return (
-            <div className="progress-step" key={label}>
-              <span
-                className={`progress-circle${completed ? " completed" : ""}${current ? " current" : ""}`}
-              >
-                {completed ? "✓" : step}
+            <li className="progress-step" key={label} aria-current={position === currentStep ? "step" : undefined}>
+              <span className={`progress-circle${state}`} aria-hidden="true">
+                {position < currentStep ? "✓" : position}
               </span>
-              <span
-                className={`progress-label${completed ? " completed" : ""}${current ? " current" : ""}`}
-              >
-                {label}
-              </span>
-            </div>
+              <span className={`progress-label${state}`}>{label}</span>
+            </li>
           );
         })}
-      </div>
-      <p>Step {currentStep} of {labels.length}</p>
+      </ol>
     </div>
   );
 }

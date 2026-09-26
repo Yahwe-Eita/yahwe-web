@@ -4,23 +4,25 @@ import { motion, type HTMLMotionProps } from "motion/react";
 
 interface SubmitButtonProps extends HTMLMotionProps<"button"> {
   pending?: boolean;
-  pendingLabel?: string;
+  pendingLabel: string;
 }
 
 export function SubmitButton({
   children,
   pending,
-  pendingLabel = "Please wait…",
+  pendingLabel,
   className = "",
   disabled,
   ...props
 }: SubmitButtonProps) {
+  const inactive = disabled || pending;
   return (
     <motion.button
       className={`submit-button ${className}`}
-      disabled={disabled || pending}
-      whileHover={disabled || pending ? undefined : { y: -1 }}
-      whileTap={disabled || pending ? undefined : { scale: 0.985 }}
+      disabled={inactive}
+      aria-busy={pending || undefined}
+      whileHover={inactive ? undefined : { y: -1 }}
+      whileTap={inactive ? undefined : { scale: 0.985 }}
       {...props}
     >
       {pending ? pendingLabel : children}

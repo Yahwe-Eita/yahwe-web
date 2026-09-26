@@ -1,18 +1,14 @@
-import type { ApiEnvelope, ProfileData } from "@/lib/api/types";
-import { apiRequest } from "@/lib/api/upstream";
-import { requireApiSession } from "@/lib/server/api-session";
-import { errorResponse } from "@/lib/server/request";
-import { withProfileFallbacks } from "@/lib/api/compat";
-import { assertSameOrigin } from "@/lib/server/request";
+import type { ApiEnvelope, ProfileData, SuccessResult } from "@/lib/api/types";
+import { HttpError } from "@/lib/http-error";
+import { sessionRequest } from "@/lib/server/api-session";
+import { assertSameOrigin, errorResponse, json } from "@/lib/server/request";
 import { clearSession } from "@/lib/server/session";
 
 export async function GET() {
   try {
-    const session = await requireApiSession();
-    const response = await apiRequest<ApiEnvelope<ProfileData>>("/profile", {
-      token: session.accessToken,
-    });
-    return Response.json(withProfileFallbacks(response.data ?? {}));
+    const response = await sessionRequest<ApiEnvelope<ProfileData>>("/profile");
+    if (!response.data) throw new HttpError("The service is temporarily unavailable. Please try again.", 502);
+    return json<ProfileData>(response.data);
   } catch (error) {
     return errorResponse(error);
   }
@@ -21,13 +17,12 @@ export async function GET() {
 export async function DELETE(request: Request) {
   try {
     assertSameOrigin(request);
-    const session = await requireApiSession();
-    await apiRequest("/profile", {
-      method: "DELETE",
-      token: session.accessToken,
-    });
+    const response = await sessionRequest<ApiEnvelope<unknown>>("/profile", { method: "DELETE" });
+    if (response.status !== true) {
+      throw new HttpError(response.message ?? "Your account could not be deleted.", 409);
+    }
     await clearSession();
-    return Response.json({ success: true });
+    return json<SuccessResult>({ success: true });
   } catch (error) {
     return errorResponse(error);
   }

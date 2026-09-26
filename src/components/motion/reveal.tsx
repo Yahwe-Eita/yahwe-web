@@ -1,33 +1,26 @@
-"use client";
+import type { CSSProperties, ReactNode } from "react";
 
-import { motion } from "motion/react";
-import type { ReactNode } from "react";
-
+/** Entrance animations are CSS-only so server-rendered content is visible before scripts load. */
 export function Reveal({
   children,
-  className,
+  className = "",
   delay = 0,
 }: {
   children: ReactNode;
   className?: string;
   delay?: number;
 }) {
+  const style = delay ? ({ animationDelay: `${delay}s` } as CSSProperties) : undefined;
   return (
-    <motion.div
-      className={className}
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.18 }}
-      transition={{ delay, duration: 0.42 }}
-    >
+    <div className={`reveal ${className}`} style={style}>
       {children}
-    </motion.div>
+    </div>
   );
 }
 
 export function Stagger({
   children,
-  className,
+  className = "",
   ariaLabel,
 }: {
   children: ReactNode;
@@ -35,38 +28,12 @@ export function Stagger({
   ariaLabel?: string;
 }) {
   return (
-    <motion.div
-      className={className}
-      aria-label={ariaLabel}
-      role={ariaLabel ? "group" : undefined}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.12 }}
-      variants={{
-        hidden: {},
-        visible: { transition: { staggerChildren: 0.09, delayChildren: 0.06 } },
-      }}
-    >
+    <div className={`stagger ${className}`} aria-label={ariaLabel} role={ariaLabel ? "group" : undefined}>
       {children}
-    </motion.div>
+    </div>
   );
 }
 
 export function StaggerItem({ children }: { children: ReactNode }) {
-  return (
-    <motion.div
-      className="motion-item"
-      variants={{
-        hidden: { opacity: 0, y: 16, scale: 0.985 },
-        visible: {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          transition: { duration: 0.4 },
-        },
-      }}
-    >
-      {children}
-    </motion.div>
-  );
+  return <div className="motion-item reveal">{children}</div>;
 }

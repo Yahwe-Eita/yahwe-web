@@ -1,24 +1,23 @@
+import type { ApiEnvelope, ResetPasswordResult } from "@/lib/api/types";
 import { apiRequest } from "@/lib/api/upstream";
-import { assertSameOrigin, errorResponse } from "@/lib/server/request";
-import { emailField, isRecord } from "@/lib/validation";
+import { HttpError } from "@/lib/http-error";
+import { assertSameOrigin, errorResponse, json, readJson } from "@/lib/server/request";
+import { emailField } from "@/lib/validation";
+import { rateLimit } from "@/lib/server/rate-limit";
 
 export async function POST(request: Request) {
   try {
     assertSameOrigin(request);
-    const input: unknown = await request.json();
-    if (!isRecord(input)) throw new Error("Invalid reset request.");
-
-    const response = await apiRequest<{ status: boolean; message: string; pinId: string | null }>("/reset-password", {
-      method: "POST",
-      body: JSON.stringify({ email: emailField(input.email) }),
-    });
+    rateLimit(request, "resetPassword");
+    const input = await readJson(request);
+    const response = await apiRequest<ApiEnvelope<never> & { pinId?: string | null }>(
+      "/reset-password",
+      { method: "POST", body: JSON.stringify({ email: emailField(input.email) }) },
+    );
     if (!response.status || !response.pinId) {
-      return Response.json(
-        { message: response.message || "Unable to start reset. Please try again shortly." },
-        { status: 400 },
-      );
+      throw new HttpError(response.message ?? "The reset could not be started. Please try again.", 400);
     }
-    return Response.json(response);
+    return json<ResetPasswordResult>({ pinId: response.pinId, message: response.message ?? "" });
   } catch (error) {
     return errorResponse(error);
   }

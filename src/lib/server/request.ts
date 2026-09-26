@@ -1,39 +1,53 @@
 import "server-only";
 
-export class RequestError extends Error {
-  public readonly expose = true;
+import { HttpError } from "@/lib/http-error";
+import { isRecord } from "@/lib/validation";
 
-  constructor(message: string, public readonly status: number) {
-    super(message);
-  }
-}
+const MAX_BODY_BYTES = 16_384;
 
 export function assertSameOrigin(request: Request) {
   const origin = request.headers.get("origin");
-  if (origin && origin !== new URL(request.url).origin) {
-    throw new RequestError("Invalid request origin.", 403);
+  if (origin) {
+    if (origin !== new URL(request.url).origin) {
+      throw new HttpError("Invalid request origin.", 403);
+    }
+    return;
+  }
+  if (request.headers.get("sec-fetch-site") !== "same-origin") {
+    throw new HttpError("Invalid request origin.", 403);
   }
 }
 
-export function errorResponse(error: unknown) {
-  const status =
-    error instanceof Error &&
-    "status" in error &&
-    typeof error.status === "number"
-      ? error.status
-      : 500;
-  const expose =
-    error instanceof Error &&
-    "expose" in error &&
-    error.expose === true;
-  const message =
-    expose && error instanceof Error
-      ? error.message
-      : "The request could not be completed.";
+export async function readJson(request: Request) {
+  const declared = Number(request.headers.get("content-length") ?? 0);
+  if (declared > MAX_BODY_BYTES) throw new HttpError("The request is too large.", 413);
 
-  if (status >= 500) {
-    console.error("[Yahwe API route]", error);
+  const text = await request.text();
+  if (Buffer.byteLength(text) > MAX_BODY_BYTES) {
+    throw new HttpError("The request is too large.", 413);
   }
 
-  return Response.json({ message }, { status });
+  let value: unknown;
+  try {
+    value = JSON.parse(text);
+  } catch {
+    throw new HttpError("Invalid request.", 400);
+  }
+  if (!isRecord(value)) throw new HttpError("Invalid request.", 400);
+  return value;
+}
+
+export function json<T>(body: T, init?: ResponseInit) {
+  return Response.json(body, init);
+}
+
+export function errorResponse(error: unknown) {
+  if (error instanceof HttpError) {
+    return Response.json({ message: error.message }, { status: error.status });
+  }
+  console.error("[Yahwe API route]", error);
+  return Response.json(
+    { message: "Something went wrong. Please try again." },
+    { status: 500 },
+  );
 }

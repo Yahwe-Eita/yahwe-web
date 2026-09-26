@@ -1,23 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
-export function useCountdown(createdAt: string | undefined, days: number) {
-  const target = useMemo(() => {
-    const created = createdAt ? new Date(createdAt).getTime() : Number.NaN;
-    return created + days * 24 * 60 * 60 * 1000;
-  }, [createdAt, days]);
-  const [remaining, setRemaining] = useState(() => target - Date.now());
+/** Milliseconds left until the deadline, ticking every second; null when there is no valid deadline. */
+export function useCountdown(deadline: string | undefined) {
+  const target = deadline ? new Date(deadline).getTime() : Number.NaN;
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
-    const update = () => setRemaining(target - Date.now());
-    update();
-    const timer = window.setInterval(update, 1000);
+    if (!Number.isFinite(target)) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, [target]);
 
-  return {
-    isAvailable: Number.isFinite(target),
-    remaining,
-  };
+  return Number.isFinite(target) ? target - now : null;
 }

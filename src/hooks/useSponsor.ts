@@ -7,10 +7,6 @@ import type { SponsorResult } from "@/lib/api/types";
 export function useSponsor() {
   return useMutation({
     mutationFn: async (phone: string) =>
-      (
-        await axios.get<SponsorResult>("/api/sponsor", {
-          params: { phone },
-        })
-      ).data,
+      (await axios.post<SponsorResult>("/api/sponsor", { phone })).data,
   });
 }

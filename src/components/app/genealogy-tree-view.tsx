@@ -1,37 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { EmptyState } from "@/components/app/empty-state";
 import { GenealogyTree } from "@/components/app/genealogy-tree";
+import { Icon } from "@/components/icon";
 import { PageHeading } from "@/components/app/page-heading";
 import { QueryError, QueryLoading } from "@/components/app/query-state";
 import { useGenealogy } from "@/hooks/useGenealogy";
 
-export function GenealogyTreeView() {
+export function GenealogyTreeView({ depthLimit }: { depthLimit: number }) {
   const genealogy = useGenealogy();
-  if (genealogy.isPending) return <QueryLoading label="Loading Genealogy..." />;
-  if (genealogy.error) return <QueryError error={genealogy.error} retry={() => genealogy.refetch()} title="Couldn't load genealogy" fallback="Please try again." retryLabel="Retry" />;
+  const heading = (
+    <PageHeading
+      title="Genealogy tree"
+      action={
+        <Link className="small-button" href="/genealogy">
+          <Icon name="mingcute:arrow-left-line" size={18} /> List view
+        </Link>
+      }
+    />
+  );
+
+  if (genealogy.isPending) return <>{heading}<QueryLoading /></>;
+  if (genealogy.error) return <>{heading}<QueryError error={genealogy.error} retry={() => genealogy.refetch()} /></>;
 
   return (
     <>
-      <PageHeading
-        title="Genealogy"
-        action={
-          <div className="button-row">
-            <Link className="small-button" href="/genealogy" aria-label="Back">←</Link>
-          </div>
-        }
-      />
+      {heading}
       {genealogy.data.isTruncated ? (
         <p className="form-message form-message-info">
-          Tree truncated at 15 levels. Deeper downlines exist but aren&apos;t shown.
+          Your network goes deeper than the {depthLimit} levels that earn rewards. Only those levels are shown.
         </p>
       ) : null}
-      {genealogy.data.user ? (
-        <GenealogyTree root={genealogy.data.user} />
-      ) : (
-        <EmptyState title="No Genealogy Data Yet" description="Start by recruiting or inviting your first member." />
-      )}
+      <GenealogyTree root={genealogy.data.user} />
     </>
   );
 }

@@ -1,40 +1,42 @@
-import type { ApiEnvelope } from "@/lib/api/types";
+import type { ApiEnvelope, SponsorResult } from "@/lib/api/types";
 import { apiRequest } from "@/lib/api/upstream";
-import { setRegistration } from "@/lib/server/registration";
-import { errorResponse } from "@/lib/server/request";
+import { HttpError } from "@/lib/http-error";
+import { getRegistration, setRegistration } from "@/lib/server/registration";
+import { assertSameOrigin, errorResponse, json, readJson } from "@/lib/server/request";
 import { ghanaPhoneField } from "@/lib/validation";
+import { rateLimit } from "@/lib/server/rate-limit";
 
-interface SponsorResponse {
-  accessToken?: string;
-  id?: number;
-  name?: string;
-  phone?: string;
+interface UpstreamSponsor {
+  id: number;
+  name: string;
+  phone: string;
 }
 
-export async function GET(request: Request) {
+export async function POST(request: Request) {
   try {
-    const phone = ghanaPhoneField(new URL(request.url).searchParams.get("phone"));
-    const query = new URLSearchParams({ phone: phone.international });
-    const response = await apiRequest<ApiEnvelope<SponsorResponse>>(`/sponsor?${query}`);
-    const sponsor = response.data;
+    assertSameOrigin(request);
+    rateLimit(request, "sponsor");
+    const input = await readJson(request);
+    const phone = ghanaPhoneField(input.phone);
 
+    const existing = await getRegistration();
+    if (existing?.feeReference) {
+      throw new HttpError("A payment is already in progress for this registration.", 409);
+    }
+
+    const query = new URLSearchParams({ phone: phone.international });
+    const response = await apiRequest<ApiEnvelope<UpstreamSponsor>>(`/sponsor?${query}`);
+    const sponsor = response.data;
     if (!sponsor?.id || !sponsor.name) {
-      return Response.json(
-        { message: response.message ?? "No registered member with this number" },
-        { status: 404 },
-      );
+      throw new HttpError(response.message ?? "No registered member with this number.", 404);
     }
 
     await setRegistration({
       sponsorId: sponsor.id,
       sponsorName: sponsor.name,
-      sponsorPhone: sponsor.phone ?? phone.international,
-      accessToken: sponsor.accessToken,
+      sponsorPhone: sponsor.phone,
     });
-
-    return Response.json({
-      sponsor: { name: sponsor.name, phone: sponsor.phone ?? phone.international },
-    });
+    return json<SponsorResult>({ sponsor: { name: sponsor.name, phone: sponsor.phone } });
   } catch (error) {
     return errorResponse(error);
   }

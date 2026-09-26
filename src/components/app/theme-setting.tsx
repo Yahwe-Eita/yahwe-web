@@ -1,54 +1,45 @@
 "use client";
 
-import { useEffect, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
+import {
+  readThemePreference,
+  saveThemePreference,
+  THEME_EVENT,
+  type ThemePreference,
+} from "@/lib/theme";
 
-type Theme = "light" | "dark" | "system";
+const options: { value: ThemePreference; label: string }[] = [
+  { value: "light", label: "Light" },
+  { value: "dark", label: "Dark" },
+  { value: "system", label: "Device" },
+];
+
+function subscribe(onChange: () => void) {
+  window.addEventListener("storage", onChange);
+  window.addEventListener(THEME_EVENT, onChange);
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener(THEME_EVENT, onChange);
+  };
+}
 
 export function ThemeSetting() {
-  const theme = useSyncExternalStore<Theme>(
-    (onChange) => {
-      window.addEventListener("storage", onChange);
-      window.addEventListener("yahwe-theme-change", onChange);
-      return () => {
-        window.removeEventListener("storage", onChange);
-        window.removeEventListener("yahwe-theme-change", onChange);
-      };
-    },
-    () => {
-      const value = window.localStorage.getItem("yahwe-theme");
-      return value === "light" || value === "dark" || value === "system"
-        ? value
-        : "system";
-    },
-    () => "system",
-  );
-
-  useEffect(() => {
-    const dark =
-      theme === "dark" ||
-      (theme === "system" &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches);
-    document.documentElement.dataset.theme = dark ? "dark" : "light";
-  }, [theme]);
-
-  function update(next: Theme) {
-    window.localStorage.setItem("yahwe-theme", next);
-    window.dispatchEvent(new Event("yahwe-theme-change"));
-  }
+  const theme = useSyncExternalStore<ThemePreference>(subscribe, readThemePreference, () => "system");
 
   return (
     <fieldset className="settings-group">
       <legend>Appearance</legend>
-      <p>Choose how Yahwe-Eita appears on this device.</p>
-      <div className="segmented-control">
-        {(["light", "dark", "system"] as const).map((option) => (
+      <div className="segmented-control" role="radiogroup" aria-label="Theme">
+        {options.map((option) => (
           <button
-            className={theme === option ? "selected" : ""}
+            className={theme === option.value ? "selected" : ""}
             type="button"
-            key={option}
-            onClick={() => update(option)}
+            role="radio"
+            aria-checked={theme === option.value}
+            key={option.value}
+            onClick={() => saveThemePreference(option.value)}
           >
-            {option.charAt(0).toUpperCase() + option.slice(1)}
+            {option.label}
           </button>
         ))}
       </div>

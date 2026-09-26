@@ -6,11 +6,7 @@ import type { PhoneVerificationResult } from "@/lib/api/types";
 
 export function useVerifyPhone() {
   return useMutation({
-    mutationFn: async (payload: { phone: string }) =>
-      (
-        await axios.get<PhoneVerificationResult>("/api/verify", {
-          params: { type: "phone", id: payload.phone, provider: "mtn-gh" },
-        })
-      ).data,
+    mutationFn: async (phone: string) =>
+      (await axios.post<PhoneVerificationResult>("/api/verify/phone", { phone })).data,
   });
 }

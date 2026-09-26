@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Icon } from "@iconify/react";
+import { Icon } from "@/components/icon";
 import { Logo } from "@/components/logo";
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
@@ -37,13 +37,13 @@ export function LandingHeader() {
           aria-label="Open menu"
           onClick={() => setOpen(true)}
         >
-          <Icon icon="mingcute:menu-line" width="26" aria-hidden="true" />
+          <Icon name="mingcute:menu-line" size={26} />
         </button>
         <DialogContent className="landing-menu" aria-describedby={undefined}>
           <div className="landing-menu-header">
             <DialogTitle>Menu</DialogTitle>
             <DialogClose className="icon-button" aria-label="Close menu">
-              <Icon icon="mingcute:close-line" width="22" aria-hidden="true" />
+              <Icon name="mingcute:close-line" size={22} />
             </DialogClose>
           </div>
           <div className="landing-menu-links">

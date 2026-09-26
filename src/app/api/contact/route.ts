@@ -1,12 +1,16 @@
-import { assertSameOrigin, errorResponse, RequestError } from "@/lib/server/request";
-import { emailField, ghanaPhoneField, isRecord, textField } from "@/lib/validation";
+import type { SuccessResult } from "@/lib/api/types";
+import { HttpError } from "@/lib/http-error";
+import { rateLimit } from "@/lib/server/rate-limit";
+import { assertSameOrigin, errorResponse, json, readJson } from "@/lib/server/request";
+import { emailField, ghanaPhoneField, textField } from "@/lib/validation";
+
+const UNAVAILABLE = "Messages cannot be sent right now. Please use WhatsApp or email.";
 
 export async function POST(request: Request) {
   try {
     assertSameOrigin(request);
-    const input: unknown = await request.json();
-    if (!isRecord(input)) throw new RequestError("Invalid contact request.", 400);
-
+    rateLimit(request, "contact");
+    const input = await readJson(request);
     const message = {
       firstName: textField(input.firstName, "First name", { max: 100 }),
       lastName: textField(input.lastName, "Last name", { max: 100 }),
@@ -16,9 +20,7 @@ export async function POST(request: Request) {
     };
 
     const webhookUrl = process.env.CONTACT_WEBHOOK_URL?.trim();
-    if (!webhookUrl) {
-      throw new RequestError("Messages cannot be sent right now.", 503);
-    }
+    if (!webhookUrl) throw new HttpError(UNAVAILABLE, 503);
 
     let response: Response;
     try {
@@ -27,17 +29,17 @@ export async function POST(request: Request) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(message),
         cache: "no-store",
+        signal: AbortSignal.timeout(15_000),
       });
-    } catch {
-      throw new RequestError("Messages cannot be sent right now.", 503);
+    } catch (error) {
+      console.error("[Contact webhook unreachable]", error);
+      throw new HttpError(UNAVAILABLE, 503);
     }
-
     if (!response.ok) {
       console.error("[Contact webhook]", response.status);
-      throw new RequestError("Your message was not sent. Please try again.", 502);
+      throw new HttpError(UNAVAILABLE, 502);
     }
-
-    return Response.json({ sent: true });
+    return json<SuccessResult>({ success: true });
   } catch (error) {
     return errorResponse(error);
   }

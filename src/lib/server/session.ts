@@ -2,55 +2,43 @@ import "server-only";
 
 import { cookies } from "next/headers";
 import type { AuthPayload, SessionUser } from "@/lib/api/types";
+import { cookieOptions } from "@/lib/server/cookies";
 import { seal, unseal } from "@/lib/server/seal";
 
 const SESSION_COOKIE = "yahwe_session";
-const THIRTY_DAYS = 60 * 60 * 24 * 30;
+/** Matches the upstream refresh token lifetime. */
+const SESSION_MAX_AGE = 60 * 60 * 24 * 30;
 
 export interface Session {
   accessToken: string;
-  refreshToken?: string;
+  refreshToken: string;
   user: SessionUser;
 }
 
-const cookieOptions = {
-  httpOnly: true,
-  sameSite: "lax" as const,
-  secure: process.env.NODE_ENV === "production",
-  path: "/",
-  priority: "high" as const,
-};
+export function sessionFromAuth(auth: AuthPayload): Session {
+  return {
+    accessToken: auth.accessToken,
+    refreshToken: auth.refreshToken,
+    user: { id: auth.user.userId, name: auth.user.name, email: auth.user.email },
+  };
+}
 
-export async function getSession(): Promise<Session | null> {
+export async function getSession() {
   const store = await cookies();
-  return unseal<Session>(store.get(SESSION_COOKIE)?.value);
+  return unseal<Session>("session", store.get(SESSION_COOKIE)?.value);
+}
+
+export async function writeSession(session: Session) {
+  const store = await cookies();
+  store.set(SESSION_COOKIE, seal("session", session, SESSION_MAX_AGE), {
+    ...cookieOptions,
+    maxAge: SESSION_MAX_AGE,
+  });
+  return session.user;
 }
 
 export async function setSession(auth: AuthPayload) {
-  const id = auth.user.userId ?? auth.user.id;
-  const accessToken = auth.accessToken ?? auth.access_token;
-  if (!accessToken || !id || !auth.user.name || !auth.user.email) {
-    throw new Error("The authentication response is incomplete.");
-  }
-
-  const session: Session = {
-    accessToken,
-    refreshToken: auth.refreshToken ?? auth.refresh_token,
-    user: {
-      id,
-      name: auth.user.name,
-      email: auth.user.email,
-      picture: auth.user.picture,
-    },
-  };
-
-  const store = await cookies();
-  store.set(SESSION_COOKIE, seal(session), {
-    ...cookieOptions,
-    maxAge: THIRTY_DAYS,
-  });
-
-  return session.user;
+  return writeSession(sessionFromAuth(auth));
 }
 
 export async function clearSession() {

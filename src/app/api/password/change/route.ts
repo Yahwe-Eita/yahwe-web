@@ -1,34 +1,25 @@
+import type { ApiEnvelope, SuccessResult } from "@/lib/api/types";
 import { apiRequest } from "@/lib/api/upstream";
-import { assertSameOrigin, errorResponse } from "@/lib/server/request";
-import { isRecord, textField } from "@/lib/validation";
+import { HttpError } from "@/lib/http-error";
+import { assertSameOrigin, errorResponse, json, readJson } from "@/lib/server/request";
+import { passwordField, textField } from "@/lib/validation";
 
 export async function POST(request: Request) {
   try {
     assertSameOrigin(request);
-    const input: unknown = await request.json();
-    if (!isRecord(input)) throw new Error("Invalid password change request.");
-
+    const input = await readJson(request);
     const pinId = textField(input.pinId, "Reset session", { max: 128 });
     const code = textField(input.code, "Reset code", { min: 6, max: 6 });
-    const newPassword = textField(input.newPassword, "New password");
-    if (newPassword.length < 6) {
-      return Response.json(
-        { message: "Password must be at least 6 characters" },
-        { status: 400 },
-      );
-    }
+    const newPassword = passwordField(input.newPassword);
 
-    const response = await apiRequest<{ status: boolean; message: string }>(
-      "/password/change",
-      {
-        method: "POST",
-        body: JSON.stringify({ pinId, code, newPassword }),
-      },
-    );
+    const response = await apiRequest<ApiEnvelope<never>>("/password/change", {
+      method: "POST",
+      body: JSON.stringify({ pinId, code, newPassword }),
+    });
     if (!response.status) {
-      return Response.json({ message: response.message }, { status: 400 });
+      throw new HttpError(response.message ?? "The password could not be changed.", 400);
     }
-    return Response.json(response);
+    return json<SuccessResult>({ success: true });
   } catch (error) {
     return errorResponse(error);
   }

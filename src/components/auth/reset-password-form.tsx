@@ -11,27 +11,26 @@ export function ResetPasswordForm() {
   const router = useRouter();
   const resetPassword = useResetPassword();
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
+  function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    resetPassword.reset();
     const form = new FormData(event.currentTarget);
-
-    try {
-      const result = await resetPassword.mutateAsync({ email: String(form.get("email") ?? "") });
-      if (!result.pinId) throw new Error("Unable to start reset. Please try again shortly.");
-      router.push(`/reset-password/verify?pinId=${encodeURIComponent(result.pinId)}`);
-    } catch {}
+    resetPassword.mutate(
+      { email: String(form.get("email") ?? "") },
+      { onSuccess: (result) => router.push(`/reset-password/verify?pinId=${encodeURIComponent(result.pinId)}`) },
+    );
   }
 
   return (
     <form className="form-stack" onSubmit={submit}>
       <label className="field">
-        <span className="sr-only">Email</span>
-        <input name="email" type="email" autoComplete="email" placeholder="Enter email" required />
+        <span>Email</span>
+        <input name="email" type="email" autoComplete="email" placeholder="you@example.com" required />
       </label>
-      <FormMessage message={resetPassword.error ? getErrorMessage(resetPassword.error, "Failed to reset password") : undefined} />
-      <SubmitButton pending={resetPassword.isPending} pendingLabel="Reset Password">
-        Reset Password
+      <FormMessage
+        message={resetPassword.error ? getErrorMessage(resetPassword.error, "The reset could not be started. Please try again.") : undefined}
+      />
+      <SubmitButton pending={resetPassword.isPending} pendingLabel="Sending code…">
+        Send reset code
       </SubmitButton>
     </form>
   );

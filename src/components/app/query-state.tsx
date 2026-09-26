@@ -2,11 +2,11 @@
 
 import { getErrorMessage } from "@/lib/error-message";
 
-export function QueryLoading({ label }: { label?: string }) {
+export function QueryLoading({ label = "Loading…" }: { label?: string }) {
   return (
     <div className="loading-state" role="status">
       <span className="spinner" aria-hidden="true" />
-      {label ? <p>{label}</p> : null}
+      <p>{label}</p>
     </div>
   );
 }
@@ -14,23 +14,19 @@ export function QueryLoading({ label }: { label?: string }) {
 export function QueryError({
   error,
   retry,
-  title = "We couldn’t load this data",
-  fallback = "Please check your connection and try again.",
-  retryLabel = "Try again",
+  title = "This could not be loaded",
 }: {
   error: Error;
   retry: () => void;
   title?: string;
-  fallback?: string;
-  retryLabel?: string;
 }) {
   return (
     <div className="empty-state" role="alert">
       <span aria-hidden="true">!</span>
       <h2>{title}</h2>
-      <p>{getErrorMessage(error, fallback)}</p>
+      <p>{getErrorMessage(error, "Check your connection and try again.")}</p>
       <button className="small-button" type="button" onClick={retry}>
-        {retryLabel}
+        Try again
       </button>
     </div>
   );

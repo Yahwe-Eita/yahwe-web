@@ -1,13 +1,10 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export function Logo({ href = "/" }: { href?: string }) {
   return (
     <Link className="brand app-brand" href={href} aria-label="Yahwe-Eita home">
-      <img
-        src="/original-logo.png"
-        alt="Yahwe-Eita"
-        style={{ width: 40, height: 40 }}
-      />
+      <Image src="/original-logo.png" alt="" width={33} height={40} loading="eager" />
       <span>YAHWE-EITA</span>
     </Link>
   );

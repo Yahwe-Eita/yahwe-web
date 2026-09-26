@@ -1,12 +1,15 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import type { FeeResult } from "@/lib/api/types";
+import type { FeeOutcome } from "@/lib/api/types";
 
-export function useFee(again = false) {
+export function useFee() {
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async () =>
-      (await axios.post<FeeResult>(`/api/fee?again=${again}`)).data,
+    mutationFn: async () => (await axios.post<FeeOutcome>("/api/fee")).data,
+    onSuccess: (result) => {
+      if (result.outcome === "registered") queryClient.clear();
+    },
   });
 }
