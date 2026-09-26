@@ -26,6 +26,7 @@ const pending = {
   sponsorId: 1,
   feeId: "",
   platform: "ANDROID" as const,
+  pinId: "pin-1",
 };
 
 const base: RegistrationState = { sponsorId: 1, sponsorName: "Kofi", sponsorPhone: "233200000000" };
@@ -68,6 +69,7 @@ describe("sponsor and phone ownership", () => {
     expect(calls.at(-1)?.path).toBe("/otp/verify?pinId=pin-1");
     const state = await getRegistration();
     expect(state?.verifiedPhone).toBe("233241234567");
+    expect(state?.verifiedPinId).toBe("pin-1");
     expect(state?.candidate).toBeUndefined();
   });
 
@@ -104,8 +106,18 @@ describe("fee payment", () => {
 
     const response = await startFee(request("/api/fee"));
     expect(await response.json()).toEqual({ outcome: "awaiting_payment" });
-    expect(calls.filter((c) => c.method === "POST" && c.path === "/fee")).toHaveLength(1);
+    const charges = calls.filter((c) => c.method === "POST" && c.path === "/fee");
+    expect(charges).toHaveLength(1);
+    expect(charges[0].body).toMatchObject({ phone: "233241234567", pinId: "pin-1" });
     expect((await getRegistration())?.feeReference).toBe("ref-2");
+  });
+
+  it("reports a refused charge as a payment problem the member can retry", async () => {
+    await setRegistration({ ...base, verifiedName: "Ama", verifiedPhone: "233241234567", verifiedPinId: "pin-1", pending });
+    fakeUpstream(() => ({ body: { status: false, message: "Payment request failed: insufficient funds" } }));
+    const response = await startFee(request("/api/fee"));
+    expect(response.status).toBe(402);
+    expect((await getRegistration())?.feeReference).toBeUndefined();
   });
 
   it("completes registration when the fee is already paid", async () => {
@@ -118,7 +130,7 @@ describe("fee payment", () => {
 
     const response = await startFee(request("/api/fee"));
     expect((await response.json()).outcome).toBe("registered");
-    expect(calls.at(-1)?.body).toMatchObject({ feeId: "ref-1", phone: "233241234567" });
+    expect(calls.at(-1)?.body).toMatchObject({ feeId: "ref-1", phone: "233241234567", pinId: "pin-1" });
     expect((await getSession())?.user.id).toBe("u-5");
     expect(await getRegistration()).toBeNull();
   });

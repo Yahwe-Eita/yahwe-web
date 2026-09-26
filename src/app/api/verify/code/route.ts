@@ -32,6 +32,7 @@ export async function POST(request: Request) {
       sponsorPhone: state.sponsorPhone,
       verifiedName: candidate.name,
       verifiedPhone: candidate.phone,
+      verifiedPinId: candidate.pinId,
     });
     return json<SuccessResult>({ success: true });
   } catch (error) {

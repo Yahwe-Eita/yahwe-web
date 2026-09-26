@@ -24,6 +24,8 @@ export interface RegistrationPayload {
   sponsorId: number;
   feeId: string;
   platform: "IOS" | "ANDROID";
+  /** Proves to the API that the code sent to this phone was confirmed. */
+  pinId: string;
 }
 
 export interface RegistrationState {
@@ -35,6 +37,7 @@ export interface RegistrationState {
   /** Set only once the code sent to the phone has been confirmed. */
   verifiedName?: string;
   verifiedPhone?: string;
+  verifiedPinId?: string;
   pending?: RegistrationPayload;
   feeReference?: string;
 }

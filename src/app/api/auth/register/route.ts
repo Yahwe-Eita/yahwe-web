@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   try {
     assertSameOrigin(request);
     const state = await requireRegistration();
-    if (!state.verifiedName || !state.verifiedPhone) {
+    if (!state.verifiedName || !state.verifiedPhone || !state.verifiedPinId) {
       throw new HttpError("Confirm your Mobile Money number first.", 409);
     }
     if (state.feeReference) {
@@ -34,6 +34,7 @@ export async function POST(request: Request) {
       platform: /iPhone|iPad|iPod/i.test(request.headers.get("user-agent") ?? "")
         ? "IOS"
         : "ANDROID",
+      pinId: state.verifiedPinId,
     };
 
     await apiRequest("/auth/register?validate_only=true", {

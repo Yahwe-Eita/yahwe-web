@@ -29,7 +29,7 @@ export async function fetchFeeStatus(reference: string): Promise<PaymentStatusRe
     : { status: fee.status };
 }
 
-/** Starts a Mobile Money charge for the pending registration and returns the upstream fee. */
+/** Starts a Mobile Money charge for the pending registration and returns the upstream fee, or a 402 when the charge was refused. */
 export async function requestFee(state: RegistrationState) {
   const payload = state.pending;
   if (!payload) throw new HttpError("Complete your details first.", 409);
@@ -41,7 +41,12 @@ export async function requestFee(state: RegistrationState) {
       customerName: payload.fullName,
       customerEmail: payload.email,
       channel: payload.channel,
+      pinId: payload.pinId,
     }),
   });
+  if (response.status === false && !response.data) {
+    console.error("[Fee refused]", response.message);
+    throw new HttpError("The payment request was not accepted. Check your MoMo wallet and try again.", 402);
+  }
   return checkedFee(response.data);
 }
