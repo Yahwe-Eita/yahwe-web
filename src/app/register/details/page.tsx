@@ -7,6 +7,7 @@ import { getProgramme } from "@/lib/server/programme";
 import { getRegistration } from "@/lib/server/registration";
 
 export const metadata: Metadata = { title: "Create account" };
+export const dynamic = "force-dynamic";
 
 function latestBirthDate(minimumAge: number) {
   const today = new Date();

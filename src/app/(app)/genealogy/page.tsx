@@ -3,6 +3,7 @@ import { GenealogyView } from "@/components/app/genealogy-view";
 import { getProgramme } from "@/lib/server/programme";
 
 export const metadata: Metadata = { title: "Genealogy" };
+export const dynamic = "force-dynamic";
 
 export default async function GenealogyPage() {
   const programme = await getProgramme();

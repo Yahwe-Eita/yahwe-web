@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { MotionProvider } from "@/components/motion/motion-provider";
+import { Preloader } from "@/components/preloader";
 import { ServiceWorkerRegistration } from "@/components/service-worker-registration";
 import { ThemeInitializer } from "@/components/theme-initializer";
 import { themeBootScript } from "@/lib/theme";
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
       </head>
       <body>
+        <Preloader year={new Date().getFullYear()} />
         <ThemeInitializer />
         <ServiceWorkerRegistration />
         <QueryProvider>

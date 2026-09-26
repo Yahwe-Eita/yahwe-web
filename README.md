@@ -27,6 +27,17 @@ deployment provider's environment settings in production.
 Set the server-only `CONTACT_WEBHOOK_URL` to the contact workflow's HTTP trigger
 URL so the landing page contact form can deliver messages.
 
+## Docker
+
+The `Dockerfile` builds a standalone Node server that listens on port 3000.
+Pass the environment variables above at run time; nothing secret is baked into
+the image.
+
+```bash
+docker build -t yahwe-web .
+docker run -p 3000:3000 --env-file .env.local yahwe-web
+```
+
 ## Quality checks
 
 ```bash
