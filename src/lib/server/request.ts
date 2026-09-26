@@ -5,10 +5,23 @@ import { isRecord } from "@/lib/validation";
 
 const MAX_BODY_BYTES = 16_384;
 
+function firstValue(header: string | null) {
+  return header?.split(",")[0]?.trim() || undefined;
+}
+
+/** The origin the browser used: behind the reverse proxy the server itself only sees its internal address. */
+export function publicOrigin(request: Request) {
+  const url = new URL(request.url);
+  const host = firstValue(request.headers.get("x-forwarded-host")) ?? request.headers.get("host");
+  if (!host) return url.origin;
+  const protocol = firstValue(request.headers.get("x-forwarded-proto")) ?? url.protocol.replace(":", "");
+  return `${protocol}://${host}`;
+}
+
 export function assertSameOrigin(request: Request) {
   const origin = request.headers.get("origin");
   if (origin) {
-    if (origin !== new URL(request.url).origin) {
+    if (origin !== publicOrigin(request)) {
       throw new HttpError("Invalid request origin.", 403);
     }
     return;

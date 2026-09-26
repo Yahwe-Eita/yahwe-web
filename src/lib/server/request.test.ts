@@ -12,6 +12,31 @@ describe("assertSameOrigin", () => {
     expect(() => assertSameOrigin(request({ "sec-fetch-site": "same-origin" }))).not.toThrow();
   });
 
+  it("accepts the public origin when served behind the reverse proxy", () => {
+    const proxied = new Request("http://0.0.0.0:3000/api/x", {
+      method: "POST",
+      headers: {
+        origin: "https://yahwe-eitaglobal.tech",
+        host: "yahwe-eita-web:3000",
+        "x-forwarded-host": "yahwe-eitaglobal.tech",
+        "x-forwarded-proto": "https",
+      },
+    });
+    expect(() => assertSameOrigin(proxied)).not.toThrow();
+  });
+
+  it("rejects another site even behind the reverse proxy", () => {
+    const proxied = new Request("http://0.0.0.0:3000/api/x", {
+      method: "POST",
+      headers: {
+        origin: "https://evil.example",
+        "x-forwarded-host": "yahwe-eitaglobal.tech",
+        "x-forwarded-proto": "https",
+      },
+    });
+    expect(() => assertSameOrigin(proxied)).toThrow(HttpError);
+  });
+
   it("rejects cross-origin requests and requests with no origin evidence", () => {
     expect(() => assertSameOrigin(request({ origin: "https://evil.example" }))).toThrow(HttpError);
     expect(() => assertSameOrigin(request({}))).toThrow(HttpError);
