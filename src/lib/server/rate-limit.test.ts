@@ -7,10 +7,10 @@ function from(address: string) {
 
 describe("rateLimit", () => {
   it("allows the limit then refuses, per address", () => {
-    const { limit } = limits.contact;
-    for (let i = 0; i < limit; i += 1) rateLimit(from("10.0.0.1"), "contact");
-    expect(() => rateLimit(from("10.0.0.1"), "contact")).toThrow(/Too many attempts/);
-    expect(() => rateLimit(from("10.0.0.2"), "contact")).not.toThrow();
+    const { limit } = limits.fee;
+    for (let i = 0; i < limit; i += 1) rateLimit(from("10.0.0.1"), "fee");
+    expect(() => rateLimit(from("10.0.0.1"), "fee")).toThrow(/Too many attempts/);
+    expect(() => rateLimit(from("10.0.0.2"), "fee")).not.toThrow();
   });
 
   it("trusts the proxy-set address over client-supplied forwarding hops", () => {

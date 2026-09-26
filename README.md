@@ -24,8 +24,6 @@ signed-in or registration pages.
 Set the server-only `YAHWE_API_URL` to the Yahwe-Eita API base URL, including
 its `/api` prefix. Keep the real value in `.env.local` locally and in your
 deployment provider's environment settings in production.
-Set the server-only `CONTACT_WEBHOOK_URL` to the contact workflow's HTTP trigger
-URL so the landing page contact form can deliver messages.
 
 ## Docker
 

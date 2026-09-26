@@ -17,7 +17,6 @@ export const limits = {
   phoneLookup: { limit: 5, windowMs: 15 * 60_000 },
   codeCheck: { limit: 10, windowMs: 15 * 60_000 },
   fee: { limit: 5, windowMs: 15 * 60_000 },
-  contact: { limit: 5, windowMs: 60 * 60_000 },
 } as const;
 
 /** The reverse proxy sets X-Real-IP; the last X-Forwarded-For hop is the one it appended. */
