@@ -214,17 +214,3 @@ export function faqs(p: Programme) {
     },
   ];
 }
-
-export const socialLinks = [
-  {
-    label: "Berth Global on Instagram",
-    href: "https://www.instagram.com/berthglobal/",
-    icon: "mingcute:instagram-line",
-  },
-  { label: "Berth Global on X", href: "https://x.com/berthglobal", icon: "mingcute:social-x-line" },
-  {
-    label: "Berth Engineering on LinkedIn",
-    href: "https://www.linkedin.com/company/berth-engineering/",
-    icon: "mingcute:linkedin-line",
-  },
-] as const satisfies readonly { label: string; href: string; icon: IconName }[];
