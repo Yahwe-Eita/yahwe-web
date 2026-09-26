@@ -44,7 +44,7 @@ export function Onboarding() {
                 />
                 <span>
                   I agree to the{" "}
-                  <a href="https://yahwe-eitaglobal.tech/terms">
+                  <a href="/#terms" target="_blank" rel="noreferrer">
                     Terms and Conditions
                   </a>
                 </span>
@@ -52,7 +52,7 @@ export function Onboarding() {
             ) : null}
             {isLast ? (
               <a
-                href="https://yahwe-eitaglobal.tech"
+                href="/#how-it-works"
                 className="external-link"
                 target="_blank"
                 rel="noreferrer"

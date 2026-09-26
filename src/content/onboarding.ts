@@ -1,10 +1,9 @@
+import { corporateValues, welcome } from "@/content/landing";
+
 export const onboardingSlides = [
   {
     title: "WELCOME",
-    body: [
-      "Congratulations on your decision to join Yahwe-eita Culture Ventures, a registered company.",
-      "Yahwe-eita Culture, is a Multi-Level Network Marketing concept designed to drive sales of goods and services online. The concept is a membership affiliate programme that is designed essentially to reward loyal customers of a chosen brand, via a simple referral and compensation formula. Yahwe-eita is MTN/Smart Phones exclusive.",
-    ],
+    body: welcome,
   },
   {
     title: "OUR PURPOSE",
@@ -17,13 +16,7 @@ export const onboardingSlides = [
   },
   {
     title: "OUR CORPORATE VALUES",
-    body: [
-      "• Rewarding outstanding performance",
-      "• Decent self-application in the Social Media space and in seeking beneficial relationships.",
-      "• Teamwork, Loyalty and Trust in building solid relationships and networks.",
-      "• Strict adherence to the highest ethical and professional standards.",
-      "• Genuine contentment in helping others to succeed.",
-    ],
+    body: corporateValues.map((value) => `• ${value.text}`),
   },
   {
     title: "TERMS AND CONDITIONS",

@@ -17,7 +17,7 @@ export default function SettingsPage() {
         </section>
         <section className="settings-group">
           <div className="settings-links">
-            <a href="https://yahwe-eitaglobal.tech/#features" target="_blank" rel="noreferrer">Help &amp; FAQ</a>
+            <a href="/#faq" target="_blank" rel="noreferrer">Help &amp; FAQ</a>
             <Link href="/onboarding">Terms Of Use</Link>
           </div>
         </section>
