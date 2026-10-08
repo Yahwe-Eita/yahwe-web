@@ -4,6 +4,9 @@ import { EmptyState } from "@/components/app/empty-state";
 import { PageHeading } from "@/components/app/page-heading";
 import { QueryError, QueryLoading } from "@/components/app/query-state";
 import { Icon } from "@/components/icon";
+import { Avatar } from "@/components/ui/avatar";
+import { Grid } from "@/components/ui/grid";
+import { MemberRow } from "@/components/ui/member-row";
 import { useNotifications } from "@/hooks/useNotifications";
 import { formatDateTime, formatRelativeTime } from "@/lib/format";
 
@@ -18,25 +21,30 @@ export function NotificationsView() {
     <>
       {heading}
       {notifications.data.length ? (
-        <ul className="list-grid">
+        <Grid variant="list" as="ul">
           {notifications.data.map((signup) => (
-            <li className="member-row" key={signup.userId}>
-              <span className="person-avatar" aria-hidden="true">
-                <Icon name="mingcute:user-follow-line" size={18} />
-              </span>
-              <div>
-                <strong>{signup.name} joined your network</strong>
-                <small>
-                  Level {signup.level}
-                  {signup.level > 1 ? `, under ${signup.sponsorName}` : ""}
-                </small>
-              </div>
-              <time dateTime={signup.joinedAt} title={formatDateTime(signup.joinedAt)}>
-                {formatRelativeTime(signup.joinedAt)}
-              </time>
-            </li>
+            <MemberRow
+              as="li"
+              key={signup.userId}
+              avatar={
+                <Avatar>
+                  <Icon name="mingcute:user-follow-line" size={18} />
+                </Avatar>
+              }
+              trailing={
+                <time dateTime={signup.joinedAt} title={formatDateTime(signup.joinedAt)}>
+                  {formatRelativeTime(signup.joinedAt)}
+                </time>
+              }
+            >
+              <strong>{signup.name} joined your network</strong>
+              <small>
+                Level {signup.level}
+                {signup.level > 1 ? `, under ${signup.sponsorName}` : ""}
+              </small>
+            </MemberRow>
           ))}
-        </ul>
+        </Grid>
       ) : (
         <EmptyState title="No new members yet" description="You will see people here as they join your network." />
       )}

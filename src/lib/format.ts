@@ -9,9 +9,27 @@ const currency = new Intl.NumberFormat("en-GH", {
 
 /** The only place a money amount becomes display text; rounds to 2 places here and nowhere else. */
 export function formatCurrency(value: Money | undefined) {
-  if (value === undefined || value.trim() === "") return "-";
+  const amount = parseMoney(value);
+  return amount === undefined ? "-" : currency.format(amount);
+}
+
+/** The same amount without the symbol, for tables that carry the symbol in a header. */
+export function formatAmount(value: Money | undefined) {
+  const amount = parseMoney(value);
+  if (amount === undefined) return "-";
+  return currency
+    .formatToParts(amount)
+    .filter((part) => part.type !== "currency" && part.type !== "literal")
+    .map((part) => part.value)
+    .join("");
+}
+
+export const currencySymbol = currency.formatToParts(0).find((part) => part.type === "currency")?.value ?? "";
+
+function parseMoney(value: Money | undefined) {
+  if (value === undefined || value.trim() === "") return undefined;
   const amount = Number(value);
-  return Number.isFinite(amount) ? currency.format(amount) : "-";
+  return Number.isFinite(amount) ? amount : undefined;
 }
 
 const dateTime = new Intl.DateTimeFormat("en-GH", { dateStyle: "medium", timeStyle: "short" });

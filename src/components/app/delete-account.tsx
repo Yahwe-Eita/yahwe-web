@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FormMessage } from "@/components/form-message";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -40,26 +41,26 @@ export function DeleteAccount() {
           if (!next) deleteAccount.reset();
         }}
       >
-        <button className="danger-button" type="button" onClick={() => setOpen(true)}>
+        <Button variant="danger" onClick={() => setOpen(true)}>
           Delete account
-        </button>
+        </Button>
         <DialogContent role="alertdialog">
           <DialogHeader>
             <DialogTitle>Delete your account?</DialogTitle>
-            <DialogDescription>This cannot be undone.</DialogDescription>
+            <DialogDescription>This action is not reversible.</DialogDescription>
           </DialogHeader>
           <FormMessage
             message={deleteAccount.error ? getErrorMessage(deleteAccount.error, "Your account could not be deleted.") : undefined}
           />
           <DialogFooter>
             <DialogClose asChild>
-              <button className="small-button" type="button" disabled={deleteAccount.isPending}>
+              <Button variant="small" disabled={deleteAccount.isPending}>
                 Cancel
-              </button>
+              </Button>
             </DialogClose>
-            <button className="danger-button" type="button" disabled={deleteAccount.isPending} onClick={remove}>
-              {deleteAccount.isPending ? "Deleting…" : "Delete account"}
-            </button>
+            <Button variant="danger" disabled={deleteAccount.isPending} onClick={remove}>
+              {deleteAccount.isPending ? "Deleting…" : "Yes, delete"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -5,6 +5,9 @@ import { useRef, useState, type FormEvent } from "react";
 import { FormMessage } from "@/components/form-message";
 import { PasswordRequirements } from "@/components/auth/password-requirements";
 import { SubmitButton } from "@/components/submit-button";
+import { Button } from "@/components/ui/button";
+import { ButtonAnchor } from "@/components/ui/button-anchor";
+import { ButtonGroup } from "@/components/ui/button-group";
 import {
   Dialog,
   DialogClose,
@@ -12,8 +15,12 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogIcon,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Form } from "@/components/ui/form";
+import { PasswordField } from "@/components/ui/password-field";
+import { TextField } from "@/components/ui/text-field";
 import { useFee } from "@/hooks/useFee";
 import { useValidateRegistration } from "@/hooks/useValidateRegistration";
 import type { Money } from "@/lib/api/types";
@@ -22,7 +29,7 @@ import { formatCurrency } from "@/lib/format";
 import { getUnmetPasswordRequirement } from "@/lib/password";
 
 function savedDetailsMessage(email: string, password: string) {
-  return `Your Yahwe-Eita login details\n\nEmail: ${email}\nPassword: ${password}\n\nKeep this private. Anyone with these details can log in to your account.`;
+  return `Your Yahwe-Eita login details\n\nEmail: ${email}\nPassword: ${password}\n\nKeep this private. Anyone with these can sign in to your account.`;
 }
 
 export function RegistrationForm({
@@ -41,7 +48,6 @@ export function RegistrationForm({
   const fee = useFee();
   const paying = useRef(false);
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [credentials, setCredentials] = useState({ email: "", password: "" });
   const [message, setMessage] = useState("");
   const [showSaveDetails, setShowSaveDetails] = useState(false);
@@ -93,70 +99,43 @@ export function RegistrationForm({
 
   return (
     <>
-      <form className="form-stack" onSubmit={submit}>
-        <label className="field">
-          <span>Full name</span>
-          <input value={fullName} readOnly />
-        </label>
-        <label className="field">
-          <span>Phone number</span>
-          <input value={`+${phone}`} readOnly />
-        </label>
-        <label className="field">
-          <span>Date of birth</span>
-          <input name="dateOfBirth" type="date" max={latestBirthDate} required />
-        </label>
-        <label className="field">
-          <span>Email address</span>
-          <input name="email" type="email" autoComplete="email" placeholder="you@example.com" required />
-        </label>
-        <div className="field">
-          <label htmlFor="new-password">Password</label>
-          <div className="password-field">
-            <input
-              id="new-password"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              autoComplete="new-password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              minLength={8}
-              aria-describedby="password-requirements"
-              required
-            />
-            <button
-              type="button"
-              className="password-toggle"
-              onClick={() => setShowPassword((visible) => !visible)}
-              aria-label={showPassword ? "Hide password" : "Show password"}
-              aria-pressed={showPassword}
-            >
-              {showPassword ? "Hide" : "Show"}
-            </button>
-          </div>
-        </div>
+      <Form onSubmit={submit}>
+        <TextField label="Full name" value={fullName} readOnly />
+        <TextField label="Phone number" value={`+${phone}`} readOnly />
+        <TextField label="Date of birth" name="dateOfBirth" type="date" max={latestBirthDate} required />
+        <TextField label="Email address" name="email" type="email" autoComplete="email" placeholder="Enter your email" required />
+        <PasswordField
+          id="new-password"
+          label="Password"
+          name="password"
+          autoComplete="new-password"
+          placeholder="Create a password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          minLength={8}
+          aria-describedby="password-requirements"
+          required
+        />
         <PasswordRequirements id="password-requirements" password={password} />
         <FormMessage
           message={
             message ||
             (validateRegistration.error
-              ? getErrorMessage(validateRegistration.error, "Your details could not be checked. Please try again.")
+              ? getErrorMessage(validateRegistration.error, "Please review your details and try again.")
               : undefined)
           }
         />
         <SubmitButton pending={validateRegistration.isPending} pendingLabel="Checking…">
           Create account
         </SubmitButton>
-      </form>
+      </Form>
 
       <Dialog open={showSaveDetails} onOpenChange={setShowSaveDetails}>
         <DialogContent>
           <DialogHeader>
-            <span className="dialog-icon" aria-hidden="true">
-              ✓
-            </span>
+            <DialogIcon>✓</DialogIcon>
             <DialogTitle>Save your login details</DialogTitle>
-            <DialogDescription>You will need these to log in.</DialogDescription>
+            <DialogDescription>Please save these details. You will need them to log in.</DialogDescription>
           </DialogHeader>
           <div className="credentials-card">
             <small>Email</small>
@@ -164,35 +143,29 @@ export function RegistrationForm({
             <small>Password</small>
             <strong>{credentials.password}</strong>
           </div>
-          <p className="warning-text">Take a screenshot or send the details to yourself.</p>
-          <div className="credential-actions">
-            <a className="small-button" href={`sms:+${phone}?body=${encodeURIComponent(details)}`}>
+          <p className="warning-text">Take a screenshot or send the details to yourself below.</p>
+          <ButtonGroup variant="credentials">
+            <ButtonAnchor variant="small" href={`sms:+${phone}?body=${encodeURIComponent(details)}`}>
               Save to SMS
-            </a>
-            <a
-              className="small-button whatsapp-button"
-              href={`https://wa.me/${phone}?text=${encodeURIComponent(details)}`}
-              target="_blank"
-              rel="noreferrer"
-            >
+            </ButtonAnchor>
+            <ButtonAnchor variant="whatsapp" href={`https://wa.me/${phone}?text=${encodeURIComponent(details)}`} external>
               Save to WhatsApp
-            </a>
-          </div>
+            </ButtonAnchor>
+          </ButtonGroup>
           <DialogFooter>
-            <button
-              className="submit-button"
-              type="button"
+            <Button
+              variant="submit"
               onClick={() => {
                 setShowSaveDetails(false);
                 setShowPayment(true);
               }}
             >
-              I&apos;ve saved them
-            </button>
+              I&apos;ve saved my details
+            </Button>
             <DialogClose asChild>
-              <button className="small-button" type="button">
+              <Button variant="small">
                 Go back
-              </button>
+              </Button>
             </DialogClose>
           </DialogFooter>
         </DialogContent>
@@ -201,16 +174,14 @@ export function RegistrationForm({
       <Dialog open={showPayment} onOpenChange={(open) => !busy && setShowPayment(open)}>
         <DialogContent>
           <DialogHeader>
-            <span className="dialog-icon dialog-icon-momo" aria-hidden="true">
-              ₵
-            </span>
-            <DialogTitle>Pay with Mobile Money</DialogTitle>
+            <DialogIcon variant="momo">₵</DialogIcon>
+            <DialogTitle>Set up Mobile Money</DialogTitle>
             <DialogDescription>
               A payment request will appear on +{phone}. Approve it with your MoMo PIN.
             </DialogDescription>
           </DialogHeader>
           <FormMessage
-            message={fee.error ? getErrorMessage(fee.error, "The payment could not be started. Please try again.") : undefined}
+            message={fee.error ? getErrorMessage(fee.error, "Payment failed. Please try again.") : undefined}
           />
           <DialogFooter>
             <SubmitButton
@@ -218,14 +189,14 @@ export function RegistrationForm({
               pending={busy}
               pendingLabel="Starting payment…"
               onClick={startPayment}
-              className="network-badge"
+              variant="network"
             >
               {feeLabel}
             </SubmitButton>
             <DialogClose asChild>
-              <button className="small-button" type="button" disabled={busy}>
+              <Button variant="small" disabled={busy}>
                 Cancel
-              </button>
+              </Button>
             </DialogClose>
           </DialogFooter>
         </DialogContent>

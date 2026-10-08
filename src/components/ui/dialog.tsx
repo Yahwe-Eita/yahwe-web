@@ -1,7 +1,7 @@
 "use client";
 
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 export const Dialog = DialogPrimitive.Root;
 export const DialogClose = DialogPrimitive.Close;
@@ -37,4 +37,12 @@ export function DialogDescription(
   props: ComponentProps<typeof DialogPrimitive.Description>,
 ) {
   return <DialogPrimitive.Description className="dialog-description" {...props} />;
+}
+
+export function DialogIcon({ variant = "default", children }: { variant?: "default" | "momo"; children: ReactNode }) {
+  return (
+    <span className={variant === "momo" ? "dialog-icon dialog-icon-momo" : "dialog-icon"} aria-hidden="true">
+      {children}
+    </span>
+  );
 }

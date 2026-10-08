@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatCurrency, formatDateTime, formatRelativeTime } from "@/lib/format";
+import { currencySymbol, formatAmount, formatCurrency, formatDateTime, formatRelativeTime } from "@/lib/format";
 
 describe("formatCurrency", () => {
   it("formats API decimal strings as cedis, rounding only here", () => {
@@ -12,6 +12,16 @@ describe("formatCurrency", () => {
     expect(formatCurrency(undefined)).toBe("-");
     expect(formatCurrency("")).toBe("-");
     expect(formatCurrency("abc")).toBe("-");
+  });
+});
+
+describe("formatAmount", () => {
+  it("matches formatCurrency without the symbol", () => {
+    expect(currencySymbol).toBe("GH₵");
+    expect(formatAmount("98370")).toBe("98,370.00");
+    expect(formatCurrency("98370")).toBe(`${currencySymbol}${formatAmount("98370")}`);
+    expect(formatAmount("-12.5")).toBe("-12.50");
+    expect(formatAmount("abc")).toBe("-");
   });
 });
 

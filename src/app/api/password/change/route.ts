@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       body: JSON.stringify({ pinId, code, newPassword }),
     });
     if (!response.status) {
-      throw new HttpError(response.message ?? "The password could not be changed.", 400);
+      throw new HttpError(response.message ?? "Couldn't verify your code. Try again.", 400);
     }
     return json<SuccessResult>({ success: true });
   } catch (error) {

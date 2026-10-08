@@ -17,7 +17,7 @@ export default async function ResetPasswordVerifyPage({
     <AuthShell
       backHref="/reset-password"
       title="Enter reset code"
-      description="Enter the 6-digit code sent to the phone number on your account."
+      description="We sent a 6-digit code to the phone number linked to your account."
     >
       <ChangePasswordForm pinId={pinId} />
     </AuthShell>

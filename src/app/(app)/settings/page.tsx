@@ -3,6 +3,8 @@ import Link from "next/link";
 import { LogoutButton } from "@/components/app/logout-button";
 import { PageHeading } from "@/components/app/page-heading";
 import { ThemeSetting } from "@/components/app/theme-setting";
+import { ExternalLink } from "@/components/ui/external-link";
+import { SettingsGroup } from "@/components/ui/settings-group";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -12,26 +14,26 @@ export default function SettingsPage() {
       <PageHeading title="Settings" />
       <div className="settings-stack">
         <ThemeSetting />
-        <nav className="settings-group" aria-label="Account and help">
+        <SettingsGroup as="nav" label="Account and help">
           <ul className="settings-links">
             <li>
-              <Link href="/profile">Your profile</Link>
+              <Link href="/profile">My account</Link>
             </li>
             <li>
-              <Link href="/reset-password">Change password</Link>
+              <Link href="/reset-password">Security</Link>
             </li>
             <li>
-              <a href="/#faq" target="_blank" rel="noreferrer">
-                Help and FAQ
-              </a>
+              <ExternalLink href="/#faq">
+                Help &amp; FAQ
+              </ExternalLink>
             </li>
             <li>
-              <a href="/#terms" target="_blank" rel="noreferrer">
-                Terms and conditions
-              </a>
+              <ExternalLink href="/#terms">
+                Terms of use
+              </ExternalLink>
             </li>
           </ul>
-        </nav>
+        </SettingsGroup>
         <LogoutButton />
       </div>
     </>

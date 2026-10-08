@@ -4,13 +4,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { FormMessage } from "@/components/form-message";
 import { SubmitButton } from "@/components/submit-button";
+import { Stack } from "@/components/ui/stack";
 import { useCompleteRegistration } from "@/hooks/useCompleteRegistration";
 import { useFee } from "@/hooks/useFee";
 import { MAX_STATUS_CHECKS, usePaymentStatus } from "@/hooks/usePaymentStatus";
 import { getErrorMessage } from "@/lib/error-message";
 import { queryKeys } from "@/lib/query-keys";
 
-export function PaymentStatus({ phone }: { phone: string }) {
+export function PaymentStatus() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const status = usePaymentStatus();
@@ -50,46 +51,46 @@ export function PaymentStatus({ phone }: { phone: string }) {
       : current === "FAILED"
         ? "Payment not completed"
         : current === "PROCESSING"
-          ? "Approve the payment"
-          : "Waiting for payment";
+          ? "Action required"
+          : "Awaiting payment";
 
   const guidance =
     current === "COMPLETED"
-      ? "Finish creating your account to go to your dashboard."
+      ? "Your payment has been confirmed. Complete registration to finish."
       : current === "FAILED"
         ? status.data?.reason ?? "The payment did not go through. No money was taken for this attempt."
         : current === "PROCESSING"
-          ? "No prompt on your phone? Dial *170#, choose My Wallet, then My Approvals, and approve it there."
-          : `Approve the payment request sent to +${phone} with your MoMo PIN.`;
+          ? "If you didn't see a payment pop-up, dial *170#, choose My Wallet > My Approvals to approve your transaction manually."
+          : "Your payment is pending. Please authorize the payment on your phone.";
 
   return (
-    <div className="form-stack">
+    <Stack>
       <div className="payment-status-icon" aria-hidden="true">
         ₵
       </div>
-      <div aria-live="polite" className="form-stack">
+      <Stack aria-live="polite">
         <h2>{heading}</h2>
         <p className="payment-instructions">{guidance}</p>
         {stopped ? (
           <p className="payment-auto-check">
-            Automatic checks have stopped. Check again once you have approved the payment.
+            Auto-check stopped. Use the button below to check manually.
           </p>
         ) : null}
-      </div>
+      </Stack>
       <FormMessage
         message={
           status.error
-            ? getErrorMessage(status.error, "The payment status could not be checked.")
+            ? getErrorMessage(status.error, "Error checking payment.")
             : retryPayment.error
-              ? getErrorMessage(retryPayment.error, "The payment could not be started. Please try again.")
+              ? getErrorMessage(retryPayment.error, "Payment failed. Please try again.")
               : completeRegistration.error
-                ? getErrorMessage(completeRegistration.error, "Your account could not be created. Please try again.")
+                ? getErrorMessage(completeRegistration.error, "Registration failed. Please try again later.")
                 : undefined
         }
       />
       {current === "COMPLETED" ? (
         <SubmitButton type="button" pending={completeRegistration.isPending} pendingLabel="Creating account…" onClick={finish}>
-          Finish registration
+          Complete registration
         </SubmitButton>
       ) : current === "FAILED" ? (
         <SubmitButton type="button" pending={retryPayment.isPending} pendingLabel="Starting payment…" onClick={tryAgain}>
@@ -105,6 +106,6 @@ export function PaymentStatus({ phone }: { phone: string }) {
           Check payment status
         </SubmitButton>
       )}
-    </div>
+    </Stack>
   );
 }

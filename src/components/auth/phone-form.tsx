@@ -1,10 +1,18 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { FormMessage } from "@/components/form-message";
+import { RegistrationProgress } from "@/components/auth/registration-progress";
 import { SubmitButton } from "@/components/submit-button";
+import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
+import { ButtonLink } from "@/components/ui/button-link";
+import { Form } from "@/components/ui/form";
+import { NetworkBadge } from "@/components/ui/network-badge";
+import { PhoneField } from "@/components/ui/phone-field";
+import { Stack } from "@/components/ui/stack";
+import { TextField } from "@/components/ui/text-field";
 import { useResendCode } from "@/hooks/useResendCode";
 import { useVerifyCode } from "@/hooks/useVerifyCode";
 import { useVerifyPhone } from "@/hooks/useVerifyPhone";
@@ -40,37 +48,29 @@ export function PhoneForm() {
   }
 
   return (
-    <div className="form-stack">
-      <div className="network-badge">MTN Mobile Money</div>
-      <form className="form-stack" onSubmit={findNumber}>
-        <label className="field">
-          <span>Your MoMo number</span>
-          <div className="phone-field">
-            <span aria-hidden="true">+233</span>
-            <input
-              name="phone"
-              type="tel"
-              inputMode="numeric"
-              autoComplete="tel-national"
-              placeholder="241234567"
-              value={phone}
-              onChange={(event) => changePhone(event.target.value)}
-              pattern="\d{9}"
-              readOnly={codeSent}
-              required
-            />
-          </div>
-          <small>9 digits, without the leading 0</small>
-        </label>
+    <Stack>
+      <RegistrationProgress step={codeSent ? "Verify" : "Phone"} />
+      <NetworkBadge>MTN Mobile Money</NetworkBadge>
+      <Form onSubmit={findNumber}>
+        <PhoneField
+          label="Phone number"
+          name="phone"
+          autoComplete="tel-national"
+          placeholder="Enter phone number"
+          value={phone}
+          onChange={(event) => changePhone(event.target.value)}
+          readOnly={codeSent}
+          required
+        />
         <FormMessage
-          message={verifyPhone.error ? getErrorMessage(verifyPhone.error, "This number could not be checked. Please try again.") : undefined}
+          message={verifyPhone.error ? getErrorMessage(verifyPhone.error, "Verification failed. Try again later.") : undefined}
         />
         {lookup?.accountExists ? (
           <div className="account-exists-panel" role="status">
-            <strong>This number already has an account.</strong>
-            <Link className="small-button" href="/login">
-              Log in
-            </Link>
+            <strong>An account with this number already exists.</strong>
+            <ButtonLink variant="small" href="/login">
+              Sign in instead
+            </ButtonLink>
           </div>
         ) : null}
         {codeSent ? null : (
@@ -78,28 +78,26 @@ export function PhoneForm() {
             Send code
           </SubmitButton>
         )}
-      </form>
+      </Form>
 
       {codeSent ? (
-        <form className="form-stack" onSubmit={confirmCode}>
+        <Form onSubmit={confirmCode}>
           <div className="verified-panel" role="status">
             <div>
               <span>MoMo account name</span>
               <strong>{lookup.name}</strong>
             </div>
           </div>
-          <label className="field">
-            <span>Code sent to +{lookup.phone}</span>
-            <input
-              name="code"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              value={code}
-              onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
-              pattern="\d{6}"
-              required
-            />
-          </label>
+          <TextField
+            label={<>Code sent to +{lookup.phone}</>}
+            name="code"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            value={code}
+            onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+            pattern="\d{6}"
+            required
+          />
           <FormMessage
             message={
               verifyCode.error
@@ -113,21 +111,20 @@ export function PhoneForm() {
           <SubmitButton pending={verifyCode.isPending} pendingLabel="Checking…" disabled={code.length !== 6}>
             Continue
           </SubmitButton>
-          <div className="button-row">
-            <button
-              className="small-button"
-              type="button"
+          <ButtonGroup>
+            <Button
+              variant="small"
               disabled={resendCode.isPending}
               onClick={() => resendCode.mutate()}
             >
               Resend code
-            </button>
-            <button className="small-button small-button-muted" type="button" onClick={() => changePhone("")}>
+            </Button>
+            <Button variant="muted" onClick={() => changePhone("")}>
               Change number
-            </button>
-          </div>
-        </form>
+            </Button>
+          </ButtonGroup>
+        </Form>
       ) : null}
-    </div>
+    </Stack>
   );
 }

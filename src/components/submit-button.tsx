@@ -1,24 +1,27 @@
 "use client";
 
 import { motion, type HTMLMotionProps } from "motion/react";
+import { buttonClassName } from "@/components/ui/button-variants";
 
 interface SubmitButtonProps extends HTMLMotionProps<"button"> {
   pending?: boolean;
   pendingLabel: string;
+  variant?: "submit" | "network";
 }
 
 export function SubmitButton({
   children,
   pending,
   pendingLabel,
-  className = "",
+  variant = "submit",
+  className,
   disabled,
   ...props
 }: SubmitButtonProps) {
   const inactive = disabled || pending;
   return (
     <motion.button
-      className={`submit-button ${className}`}
+      className={buttonClassName(variant, className)}
       disabled={inactive}
       aria-busy={pending || undefined}
       whileHover={inactive ? undefined : { y: -1 }}

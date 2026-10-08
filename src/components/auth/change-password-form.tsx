@@ -5,6 +5,8 @@ import { useState, type FormEvent } from "react";
 import { FormMessage } from "@/components/form-message";
 import { PasswordRequirements } from "@/components/auth/password-requirements";
 import { SubmitButton } from "@/components/submit-button";
+import { Form } from "@/components/ui/form";
+import { TextField } from "@/components/ui/text-field";
 import { useChangePassword } from "@/hooks/useChangePassword";
 import { getErrorMessage } from "@/lib/error-message";
 import { getUnmetPasswordRequirement } from "@/lib/password";
@@ -25,7 +27,7 @@ export function ChangePasswordForm({ pinId }: { pinId: string }) {
       return;
     }
     if (password !== String(form.get("confirm") ?? "")) {
-      setMessage("The passwords do not match.");
+      setMessage("Passwords do not match.");
       return;
     }
     changePassword.mutate(
@@ -35,35 +37,27 @@ export function ChangePasswordForm({ pinId }: { pinId: string }) {
   }
 
   return (
-    <form className="form-stack" onSubmit={submit}>
-      <label className="field">
-        <span>6-digit code</span>
-        <input name="code" inputMode="numeric" autoComplete="one-time-code" pattern="\d{6}" maxLength={6} required />
-      </label>
-      <label className="field">
-        <span>New password</span>
-        <input
-          name="password"
-          type="password"
-          autoComplete="new-password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          minLength={8}
-          aria-describedby="new-password-requirements"
-          required
-        />
-      </label>
-      <PasswordRequirements id="new-password-requirements" password={password} />
-      <label className="field">
-        <span>Confirm new password</span>
-        <input name="confirm" type="password" autoComplete="new-password" minLength={8} required />
-      </label>
-      <FormMessage
-        message={message || (changePassword.error ? getErrorMessage(changePassword.error, "The code could not be checked. Please try again.") : undefined)}
+    <Form onSubmit={submit}>
+      <TextField label="6-digit code" name="code" inputMode="numeric" autoComplete="one-time-code" placeholder="123456" pattern="\d{6}" maxLength={6} required />
+      <TextField
+        label="New password"
+        name="password"
+        type="password"
+        autoComplete="new-password"
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+        minLength={8}
+        aria-describedby="new-password-requirements"
+        required
       />
-      <SubmitButton pending={changePassword.isPending} pendingLabel="Saving…">
-        Save new password
+      <PasswordRequirements id="new-password-requirements" password={password} />
+      <TextField label="Confirm new password" name="confirm" type="password" autoComplete="new-password" placeholder="Repeat password" minLength={8} required />
+      <FormMessage
+        message={message || (changePassword.error ? getErrorMessage(changePassword.error, "Couldn't verify your code. Try again.") : undefined)}
+      />
+      <SubmitButton pending={changePassword.isPending} pendingLabel="Updating…">
+        Update password
       </SubmitButton>
-    </form>
+    </Form>
   );
 }

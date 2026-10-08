@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { FormMessage } from "@/components/form-message";
 import { SubmitButton } from "@/components/submit-button";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
@@ -11,6 +12,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Form } from "@/components/ui/form";
+import { PhoneField } from "@/components/ui/phone-field";
+import { TextField } from "@/components/ui/text-field";
 import { useInvite } from "@/hooks/useInvite";
 import { getErrorMessage } from "@/lib/error-message";
 import { localPhoneDigits } from "@/lib/validation";
@@ -37,9 +41,9 @@ export function InviteForm() {
 
   return (
     <Dialog open={open} onOpenChange={change}>
-      <button className="primary-action" type="button" onClick={() => change(true)}>
+      <Button variant="action" onClick={() => change(true)}>
         Invite someone
-      </button>
+      </Button>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Invite someone</DialogTitle>
@@ -49,42 +53,31 @@ export function InviteForm() {
           <>
             <FormMessage tone="success" message={`Invitation sent to ${name}.`} />
             <DialogClose asChild>
-              <button className="submit-button" type="button">
+              <Button variant="submit">
                 Done
-              </button>
+              </Button>
             </DialogClose>
           </>
         ) : (
-          <form className="form-stack" onSubmit={submit}>
-            <label className="field">
-              <span>Name</span>
-              <input
-                name="name"
-                autoComplete="off"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                minLength={2}
-                maxLength={100}
-                required
-              />
-            </label>
-            <label className="field">
-              <span>MTN phone number</span>
-              <div className="phone-field">
-                <span aria-hidden="true">+233</span>
-                <input
-                  name="phone"
-                  type="tel"
-                  inputMode="numeric"
-                  autoComplete="off"
-                  value={phone}
-                  onChange={(event) => setPhone(localPhoneDigits(event.target.value))}
-                  pattern="\d{9}"
-                  required
-                />
-              </div>
-              <small>9 digits, without the leading 0</small>
-            </label>
+          <Form onSubmit={submit}>
+            <TextField
+              label="Name"
+              name="name"
+              autoComplete="off"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              minLength={2}
+              maxLength={100}
+              required
+            />
+            <PhoneField
+              label="MTN phone number"
+              name="phone"
+              autoComplete="off"
+              value={phone}
+              onChange={(event) => setPhone(localPhoneDigits(event.target.value))}
+              required
+            />
             <FormMessage
               message={invite.error ? getErrorMessage(invite.error, "The invitation could not be sent. Please try again.") : undefined}
             />
@@ -92,11 +85,11 @@ export function InviteForm() {
               Send invitation
             </SubmitButton>
             <DialogClose asChild>
-              <button className="small-button" type="button">
+              <Button variant="small">
                 Cancel
-              </button>
+              </Button>
             </DialogClose>
-          </form>
+          </Form>
         )}
       </DialogContent>
     </Dialog>

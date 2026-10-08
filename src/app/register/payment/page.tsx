@@ -15,7 +15,7 @@ export default async function PaymentPage() {
   return (
     <AuthShell title="Payment">
       <RegistrationProgress step="Payment" />
-      <PaymentStatus phone={registration.pending.phone} />
+      <PaymentStatus />
     </AuthShell>
   );
 }

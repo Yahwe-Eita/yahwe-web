@@ -1,6 +1,8 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { SegmentedControl } from "@/components/ui/segmented-control";
+import { SettingsGroup } from "@/components/ui/settings-group";
 import {
   readThemePreference,
   saveThemePreference,
@@ -27,22 +29,8 @@ export function ThemeSetting() {
   const theme = useSyncExternalStore<ThemePreference>(subscribe, readThemePreference, () => "system");
 
   return (
-    <fieldset className="settings-group">
-      <legend>Appearance</legend>
-      <div className="segmented-control" role="radiogroup" aria-label="Theme">
-        {options.map((option) => (
-          <button
-            className={theme === option.value ? "selected" : ""}
-            type="button"
-            role="radio"
-            aria-checked={theme === option.value}
-            key={option.value}
-            onClick={() => saveThemePreference(option.value)}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
-    </fieldset>
+    <SettingsGroup as="fieldset" legend="Preferences">
+      <SegmentedControl label="Theme" options={options} value={theme} onChange={saveThemePreference} />
+    </SettingsGroup>
   );
 }

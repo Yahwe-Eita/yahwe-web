@@ -1,13 +1,19 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { Logo } from "@/components/logo";
+import { AuthTitle } from "@/components/ui/auth-title";
+import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
+import { ButtonLink } from "@/components/ui/button-link";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ExternalLink } from "@/components/ui/external-link";
+import { Paragraphs } from "@/components/ui/paragraphs";
 import type { OnboardingSlide } from "@/content/onboarding";
 
-export function Onboarding({ slides, minimumAge }: { slides: OnboardingSlide[]; minimumAge: number }) {
+export function Onboarding({ slides }: { slides: OnboardingSlide[] }) {
   const router = useRouter();
   const [index, setIndex] = useState(0);
   const [accepted, setAccepted] = useState(false);
@@ -31,9 +37,9 @@ export function Onboarding({ slides, minimumAge }: { slides: OnboardingSlide[]; 
     <main className="onboarding-page">
       <header className="onboarding-header">
         <Logo />
-        <Link className="button button-secondary" href="/login">
-          Log in
-        </Link>
+        <ButtonLink variant="secondary" href="/login">
+          Login
+        </ButtonLink>
       </header>
       <section className="onboarding-card" aria-live="polite">
         <AnimatePresence mode="wait" initial={false}>
@@ -44,13 +50,11 @@ export function Onboarding({ slides, minimumAge }: { slides: OnboardingSlide[]; 
             exit={{ opacity: 0, x: -8 }}
             transition={{ duration: 0.18 }}
           >
-            <h1 className="auth-title" ref={heading} tabIndex={-1}>
+            <AuthTitle ref={heading} tabIndex={-1}>
               {slide.title}
-            </h1>
+            </AuthTitle>
             <div className="onboarding-copy">
-              {slide.paragraphs.map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
-              ))}
+              <Paragraphs items={slide.paragraphs} />
               {slide.list ? (
                 <List className="onboarding-list">
                   {slide.list.map((item) => (
@@ -58,46 +62,48 @@ export function Onboarding({ slides, minimumAge }: { slides: OnboardingSlide[]; 
                   ))}
                 </List>
               ) : null}
+              {slide.closing ? <Paragraphs items={slide.closing} /> : null}
             </div>
             {isLast ? (
               <>
-                <label className="terms-check">
-                  <input
-                    type="checkbox"
-                    checked={accepted}
-                    onChange={(event) => setAccepted(event.target.checked)}
-                  />
-                  <span>I am {minimumAge} or older and I agree to these terms and conditions</span>
-                </label>
-                <a href="/#how-it-works" className="external-link" target="_blank" rel="noreferrer">
-                  How it works
-                  <span aria-hidden="true">↗</span>
-                </a>
+                <Checkbox checked={accepted} onChange={(event) => setAccepted(event.target.checked)}>
+                  I agree to the{" "}
+                  <ExternalLink href="/#terms">
+                    Terms and Conditions
+                  </ExternalLink>
+                </Checkbox>
+                <ExternalLink href="/#how-it-works" arrow>
+                  Learn how it works
+                </ExternalLink>
               </>
             ) : null}
           </motion.div>
         </AnimatePresence>
-        <div className="onboarding-actions">
+        <ButtonGroup variant="onboarding">
           {index > 0 ? (
-            <button className="button button-secondary" type="button" onClick={() => go(index - 1)}>
+            <Button variant="secondary" onClick={() => go(index - 1)}>
               Back
-            </button>
+            </Button>
           ) : null}
           {isLast ? (
-            <button
-              className="button button-primary"
-              type="button"
+            <Button
+              variant="primary"
               disabled={!accepted}
               onClick={() => router.push("/sponsor")}
             >
               Get started
-            </button>
+            </Button>
           ) : (
-            <button className="button button-primary" type="button" onClick={() => go(index + 1)}>
-              Next
-            </button>
+            <>
+              <Button variant="secondary" onClick={() => go(slides.length - 1)}>
+                Skip to terms
+              </Button>
+              <Button variant="primary" onClick={() => go(index + 1)}>
+                Next
+              </Button>
+            </>
           )}
-        </div>
+        </ButtonGroup>
       </section>
     </main>
   );

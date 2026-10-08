@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       { method: "POST", body: JSON.stringify({ email: emailField(input.email) }) },
     );
     if (!response.status || !response.pinId) {
-      throw new HttpError(response.message ?? "The reset could not be started. Please try again.", 400);
+      throw new HttpError(response.message ?? "Unable to start reset. Please try again shortly.", 400);
     }
     return json<ResetPasswordResult>({ pinId: response.pinId, message: response.message ?? "" });
   } catch (error) {

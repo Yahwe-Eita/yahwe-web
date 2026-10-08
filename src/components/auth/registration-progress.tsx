@@ -1,4 +1,4 @@
-const labels = ["Sponsor", "Phone", "Details", "Payment"] as const;
+const labels = ["Sponsor", "Phone", "Verify", "Details", "Payment"] as const;
 
 export type RegistrationStep = (typeof labels)[number];
 
@@ -20,6 +20,9 @@ export function RegistrationProgress({ step }: { step: RegistrationStep }) {
           );
         })}
       </ol>
+      <p aria-hidden="true">
+        Step {currentStep} of {labels.length}
+      </p>
     </div>
   );
 }

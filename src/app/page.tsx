@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { ContactSection } from "@/components/landing/contact-section";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingHeader } from "@/components/landing/landing-header";
@@ -14,6 +13,9 @@ import {
   ValuesSection,
   WelcomeSection,
 } from "@/components/landing/landing-sections";
+import { Reveal } from "@/components/motion/reveal";
+import { ButtonGroup } from "@/components/ui/button-group";
+import { ButtonLink } from "@/components/ui/button-link";
 import { getProgramme } from "@/lib/server/programme";
 
 export const dynamic = "force-dynamic";
@@ -27,20 +29,20 @@ export default async function HomePage() {
           <div className="landing-shell">
             <LandingHeader />
             <section className="landing-hero" aria-labelledby="hero-heading">
-              <div className="landing-content reveal">
+              <Reveal className="landing-content">
                 <h1 id="hero-heading">Be forwardly and upwardly mobile in your finances</h1>
                 <p className="landing-copy">
                   Join your community, build your network, and keep track of your progress in one place.
                 </p>
-                <div className="landing-actions">
-                  <Link className="button button-primary" href="/onboarding">
+                <ButtonGroup variant="hero">
+                  <ButtonLink variant="primary" href="/onboarding">
                     Create an account
-                  </Link>
-                  <Link className="button button-secondary" href="/login">
-                    Log in
-                  </Link>
-                </div>
-              </div>
+                  </ButtonLink>
+                  <ButtonLink variant="secondary" href="/login">
+                    Login
+                  </ButtonLink>
+                </ButtonGroup>
+              </Reveal>
             </section>
           </div>
         </div>

@@ -1,7 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect } from "react";
+import { EmptyState } from "@/components/app/empty-state";
+import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
+import { ButtonLink } from "@/components/ui/button-link";
 
 export default function AppError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
@@ -9,18 +12,23 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
   }, [error]);
 
   return (
-    <div className="empty-state" role="alert">
-      <span aria-hidden="true">!</span>
-      <h1>This page could not be loaded</h1>
-      <p>Check your connection and try again.</p>
-      <div className="button-row">
-        <button className="small-button" type="button" onClick={reset}>
-          Try again
-        </button>
-        <Link className="small-button small-button-muted" href="/dashboard">
-          Go to home
-        </Link>
-      </div>
-    </div>
+    <EmptyState
+      icon="!"
+      role="alert"
+      headingLevel={1}
+      animate={false}
+      title="This page could not be loaded"
+      description="Please try again."
+      action={
+        <ButtonGroup>
+          <Button variant="small" onClick={reset}>
+            Retry
+          </Button>
+          <ButtonLink variant="muted" href="/dashboard">
+            Go to home
+          </ButtonLink>
+        </ButtonGroup>
+      }
+    />
   );
 }

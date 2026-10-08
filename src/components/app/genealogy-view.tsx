@@ -1,10 +1,15 @@
 "use client";
 
-import Link from "next/link";
 import { EmptyState } from "@/components/app/empty-state";
 import { PageHeading } from "@/components/app/page-heading";
 import { QueryError, QueryLoading } from "@/components/app/query-state";
-import { Stagger, StaggerItem } from "@/components/motion/reveal";
+import { StaggerItem } from "@/components/motion/reveal";
+import { Avatar } from "@/components/ui/avatar";
+import { ButtonLink } from "@/components/ui/button-link";
+import { Grid } from "@/components/ui/grid";
+import { MemberRow } from "@/components/ui/member-row";
+import { Notice } from "@/components/ui/notice";
+import { StatusPill } from "@/components/ui/status-pill";
 import { useGenealogy } from "@/hooks/useGenealogy";
 
 export function GenealogyView({ depthLimit }: { depthLimit: number }) {
@@ -13,43 +18,45 @@ export function GenealogyView({ depthLimit }: { depthLimit: number }) {
     <PageHeading
       title="Genealogy"
       action={
-        <Link className="primary-action" href="/genealogy/tree">
+        <ButtonLink variant="action" href="/genealogy/tree">
           View tree
-        </Link>
+        </ButtonLink>
       }
     />
   );
 
   if (genealogy.isPending) return <>{heading}<QueryLoading /></>;
-  if (genealogy.error) return <>{heading}<QueryError error={genealogy.error} retry={() => genealogy.refetch()} /></>;
+  if (genealogy.error) return <>{heading}<QueryError title="Couldn't load genealogy" error={genealogy.error} retry={() => genealogy.refetch()} /></>;
 
   const recruits = genealogy.data.user.recruits;
   return (
     <>
       {heading}
       {recruits.length ? (
-        <Stagger className="list-grid">
+        <Grid variant="list" stagger>
           {recruits.map((recruit) => (
             <StaggerItem key={recruit.id}>
-              <article className="member-row">
-                <span className="person-avatar" aria-hidden="true">
-                  {recruit.name.charAt(0).toUpperCase()}
-                </span>
+              <MemberRow
+                avatar={<Avatar name={recruit.name} />}
+                trailing={
+                  <StatusPill tone={!recruit.active || recruit.recruitWindowClosed ? "inactive" : "active"}>
+                    {!recruit.active ? "Suspended" : recruit.recruitWindowClosed ? "Window closed" : "Recruiting"}
+                  </StatusPill>
+                }
+              >
+                <small>Downline</small>
                 <strong>{recruit.name}</strong>
-                <span className={`status-pill ${!recruit.active || recruit.recruitWindowClosed ? "status-inactive" : "status-active"}`}>
-                  {!recruit.active ? "Inactive" : recruit.recruitWindowClosed ? "Window closed" : "Recruiting"}
-                </span>
-              </article>
+              </MemberRow>
             </StaggerItem>
           ))}
-        </Stagger>
+        </Grid>
       ) : (
-        <EmptyState title="No downlines yet" description="Invite someone to start building your network." />
+        <EmptyState title="No genealogy data yet" description="You haven't invited anyone yet." />
       )}
       {genealogy.data.isTruncated ? (
-        <p className="form-message form-message-info">
-          Your network goes deeper than the {depthLimit} levels that earn rewards. Only those levels are shown.
-        </p>
+        <Notice>
+          Your tree runs deeper than the {depthLimit} levels shown here. Levels beyond level {depthLimit} do not earn rewards.
+        </Notice>
       ) : null}
     </>
   );

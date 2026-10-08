@@ -1,9 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { Icon } from "@/components/icon";
 import { Logo } from "@/components/logo";
+import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
+import { ButtonLink } from "@/components/ui/button-link";
 import { Dialog, DialogClose, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 const sections = [
@@ -26,24 +28,25 @@ export function LandingHeader() {
             {section.label}
           </a>
         ))}
-        <Link className="button button-secondary" href="/login">
-          Log in
-        </Link>
+        <ButtonLink variant="secondary" href="/login">
+          Login
+        </ButtonLink>
       </div>
       <Dialog open={open} onOpenChange={setOpen}>
-        <button
-          className="landing-menu-button"
-          type="button"
+        <Button
+          variant="menu"
           aria-label="Open menu"
           onClick={() => setOpen(true)}
         >
           <Icon name="mingcute:menu-line" size={26} />
-        </button>
+        </Button>
         <DialogContent className="landing-menu" aria-describedby={undefined}>
           <div className="landing-menu-header">
             <DialogTitle>Menu</DialogTitle>
-            <DialogClose className="icon-button" aria-label="Close menu">
-              <Icon name="mingcute:close-line" size={22} />
+            <DialogClose asChild>
+              <Button variant="icon" aria-label="Close menu">
+                <Icon name="mingcute:close-line" size={22} />
+              </Button>
             </DialogClose>
           </div>
           <div className="landing-menu-links">
@@ -53,14 +56,14 @@ export function LandingHeader() {
               </a>
             ))}
           </div>
-          <div className="landing-menu-actions">
-            <Link className="submit-button" href="/onboarding">
+          <ButtonGroup variant="menu">
+            <ButtonLink variant="submit" href="/onboarding">
               Create an account
-            </Link>
-            <Link className="small-button" href="/login">
-              Log in
-            </Link>
-          </div>
+            </ButtonLink>
+            <ButtonLink variant="small" href="/login">
+              Login
+            </ButtonLink>
+          </ButtonGroup>
         </DialogContent>
       </Dialog>
     </nav>

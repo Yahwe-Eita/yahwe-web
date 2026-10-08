@@ -18,6 +18,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   colorScheme: "light dark",
   viewportFit: "cover",
+  // Mirrors --brand and the dark --background in globals.css; meta tags cannot read CSS variables.
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#315c35" },
     { media: "(prefers-color-scheme: dark)", color: "#101512" },

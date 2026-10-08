@@ -6,11 +6,7 @@ export const metadata: Metadata = { title: "Reset password" };
 
 export default function ResetPasswordPage() {
   return (
-    <AuthShell
-      backHref="/login"
-      title="Reset password"
-      description="A code will be sent to the phone number on your account."
-    >
+    <AuthShell backHref="/login" title="Reset password">
       <ResetPasswordForm />
     </AuthShell>
   );

@@ -6,7 +6,12 @@ import { InviteForm } from "@/components/app/invite-form";
 import { PageHeading } from "@/components/app/page-heading";
 import { QueryError, QueryLoading } from "@/components/app/query-state";
 import { AnimatedProgress } from "@/components/motion/animated-progress";
-import { Stagger, StaggerItem } from "@/components/motion/reveal";
+import { StaggerItem } from "@/components/motion/reveal";
+import { ContentSection } from "@/components/ui/content-section";
+import { CountdownCard } from "@/components/ui/countdown-card";
+import { Grid } from "@/components/ui/grid";
+import { PersonCard } from "@/components/ui/person-card";
+import { StatCard } from "@/components/ui/stat-card";
 import { useHome } from "@/hooks/useHome";
 import { formatCurrency } from "@/lib/format";
 import { useSessionUser } from "@/providers/session-provider";
@@ -17,7 +22,19 @@ function greeting(hour: number) {
   return "Good evening";
 }
 
-export function DashboardView({ depthLimit }: { depthLimit: number }) {
+function cyclePeriod(cycleDays: number) {
+  return cycleDays % 7 === 0 ? { count: cycleDays / 7, unit: "week" } : { count: cycleDays, unit: "day" };
+}
+
+export function DashboardView({
+  depthLimit,
+  recruitWindowDays,
+  cycleDays,
+}: {
+  depthLimit: number;
+  recruitWindowDays: number;
+  cycleDays: number;
+}) {
   const user = useSessionUser();
   const home = useHome();
   const heading = <PageHeading greeting={greeting(new Date().getHours())} title={user.name} action={<InviteForm />} />;
@@ -29,75 +46,63 @@ export function DashboardView({ depthLimit }: { depthLimit: number }) {
   const recruits = data.user.recruits;
   const levelProgress = (Math.min(data.level, depthLimit) / depthLimit) * 100;
   const levelLabel = `Level ${data.level} of ${depthLimit}`;
+  const cycle = cyclePeriod(cycleDays);
 
   return (
     <>
       {heading}
-      <Stagger className="countdown-grid" ariaLabel="Your deadlines">
+      <Grid variant="countdown" stagger ariaLabel="Your deadlines">
         <StaggerItem>
-          <article className="countdown-card countdown-card-dark">
+          <CountdownCard dark>
             <Countdown
               deadline={data.user.recruitWindowEndsAt}
-              activeLabel="Time left to recruit"
-              expiredLabel="Your recruiting window has ended"
+              activeLabel={`Your ${recruitWindowDays}-days time left`}
+              expiredLabel={`Your ${recruitWindowDays} days to recruit have ended`}
             />
             <div className="progress-row">
               <div className="progress-track" role="progressbar" aria-label={levelLabel} aria-valuenow={data.level} aria-valuemin={0} aria-valuemax={depthLimit}>
                 <AnimatedProgress value={levelProgress} />
               </div>
-              <small>{levelLabel}</small>
+              <small>Level {data.level}</small>
             </div>
-          </article>
+          </CountdownCard>
         </StaggerItem>
         <StaggerItem>
-          <article className="countdown-card">
-            <Countdown deadline={data.user.cycleEndsAt} activeLabel="Time left in your cycle" expiredLabel="Your cycle has ended" />
-          </article>
+          <CountdownCard>
+            <Countdown
+              deadline={data.user.cycleEndsAt}
+              activeLabel={`Your ${cycle.count}-${cycle.unit}s time left`}
+              expiredLabel={`Your ${cycle.count}-${cycle.unit} cycle has ended`}
+            />
+          </CountdownCard>
         </StaggerItem>
-      </Stagger>
+      </Grid>
 
-      <Stagger className="stats-grid" ariaLabel="Account summary">
+      <Grid variant="stats" stagger ariaLabel="Account summary">
         <StaggerItem>
-          <article className="stat-card">
-            <span>Airtime rewards</span>
-            <strong>{formatCurrency(data.airtimeBalance)}</strong>
-          </article>
+          <StatCard label="Self reward airtime" value={formatCurrency(data.airtimeBalance)} />
         </StaggerItem>
         <StaggerItem>
-          <article className="stat-card stat-card-accent">
-            <span>Cash rewards this cycle</span>
-            <strong>{formatCurrency(data.cashEarned)}</strong>
-          </article>
+          <StatCard label="Cash earnings" value={formatCurrency(data.cashEarned)} accent />
         </StaggerItem>
         <StaggerItem>
-          <article className="stat-card">
-            <span>Downline members</span>
-            <strong>{data.totalRecruits}</strong>
-          </article>
+          <StatCard label="Downlines" value={data.totalRecruits} />
         </StaggerItem>
-      </Stagger>
+      </Grid>
 
-      <section className="content-section">
-        <div className="section-row">
-          <h2>Your direct downlines</h2>
-        </div>
+      <ContentSection title="My downlines">
         {recruits.length ? (
-          <Stagger className="people-grid">
+          <Grid variant="people" stagger>
             {recruits.map((recruit) => (
               <StaggerItem key={recruit.id}>
-                <article className="person-card">
-                  <span className="person-avatar" aria-hidden="true">
-                    {recruit.name.charAt(0).toUpperCase()}
-                  </span>
-                  <strong>{recruit.name}</strong>
-                </article>
+                <PersonCard name={recruit.name} />
               </StaggerItem>
             ))}
-          </Stagger>
+          </Grid>
         ) : (
-          <EmptyState title="No downlines yet" description="Invite someone to start building your network." />
+          <EmptyState title="No recruits yet" description="Invite someone to start building your network." />
         )}
-      </section>
+      </ContentSection>
     </>
   );
 }

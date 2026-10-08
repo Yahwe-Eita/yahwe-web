@@ -1,7 +1,17 @@
 import Image from "next/image";
-import Link from "next/link";
-import { Icon } from "@/components/icon";
-import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
+import { Reveal, StaggerItem } from "@/components/motion/reveal";
+import { Band } from "@/components/ui/band";
+import { ButtonGroup } from "@/components/ui/button-group";
+import { ButtonLink } from "@/components/ui/button-link";
+import { FeatureCard } from "@/components/ui/feature-card";
+import { Grid } from "@/components/ui/grid";
+import { IconListItem } from "@/components/ui/icon-list-item";
+import { Paragraphs } from "@/components/ui/paragraphs";
+import { Prose } from "@/components/ui/prose";
+import { ScrollTable } from "@/components/ui/scroll-table";
+import { Section } from "@/components/ui/section";
+import { SectionHeading } from "@/components/ui/section-heading";
+import { VisuallyHidden } from "@/components/ui/visually-hidden";
 import {
   aboutUs,
   antiMoneyLaundering,
@@ -17,41 +27,39 @@ import {
   welcome,
 } from "@/content/landing";
 import type { Programme } from "@/lib/api/types";
-import { formatCurrency } from "@/lib/format";
+import { currencySymbol, formatAmount, formatCurrency } from "@/lib/format";
 
 export function WelcomeSection() {
   return (
-    <section className="site-section site-split" id="about" aria-labelledby="about-heading">
-      <Reveal className="section-heading">
+    <Section variant="split" id="about" aria-labelledby="about-heading">
+      <SectionHeading>
         <h2 id="about-heading">Welcome</h2>
-        <div className="prose-block">
-          {welcome.map((paragraph) => (
-            <p key={paragraph}>{paragraph}</p>
-          ))}
-        </div>
+        <Prose>
+          <Paragraphs items={welcome} />
+        </Prose>
         <h3>About us</h3>
-        <div className="prose-block">
+        <Prose>
           <p>{aboutUs}</p>
-        </div>
-      </Reveal>
+        </Prose>
+      </SectionHeading>
       <Reveal className="welcome-mark" delay={0.08}>
         <Image src="/original-logo.png" alt="" width={320} height={392} />
       </Reveal>
-    </section>
+    </Section>
   );
 }
 
 export function ServicesSection() {
   return (
-    <div className="site-band">
-      <section className="site-section" aria-labelledby="services-heading">
+    <Band>
+      <Section aria-labelledby="services-heading">
         {services.map((service, index) => (
-          <Reveal className="section-heading" key={service.title}>
+          <SectionHeading key={service.title}>
             {index === 0 ? <h2 id="services-heading">{service.title}</h2> : <h3>{service.title}</h3>}
-            <div className="prose-block">
+            <Prose>
               <p>{service.body}</p>
-            </div>
-          </Reveal>
+            </Prose>
+          </SectionHeading>
         ))}
         <div className="benefit-grid">
           {benefitLists.map((list) => (
@@ -59,222 +67,246 @@ export function ServicesSection() {
               <h3 className="benefit-title">{list.title}</h3>
               <ul className="benefit-list">
                 {list.items.map((item) => (
-                  <li key={item.text}>
-                    <Icon name={item.icon} size={22} />
-                    <span>{item.text}</span>
-                  </li>
+                  <IconListItem key={item.text} icon={item.icon}>
+                    {item.text}
+                  </IconListItem>
                 ))}
               </ul>
             </Reveal>
           ))}
         </div>
-      </section>
-    </div>
+      </Section>
+    </Band>
   );
 }
 
 export function RewardTableSection({ programme }: { programme: Programme }) {
+  const [direct, ...deeper] = programme.levels;
+  const depth = programme.levels.length;
   return (
-    <section className="site-section" id="rewards" aria-labelledby="rewards-heading">
-      <Reveal className="section-heading">
-        <h2 id="rewards-heading">Instant reward table</h2>
-        <div className="prose-block">
-          <p>
-            Buy {formatCurrency(programme.feeAmount)} of airtime and receive {formatCurrency(programme.selfAirtimeReward)} of
-            airtime straight away. Each level below shows what you earn when it is full with {programme.requiredDownlines}{" "}
-            downlines per member.
-          </p>
-        </div>
-      </Reveal>
-      <div className="table-scroll">
-        <table className="reward-table">
-          <caption className="sr-only">Rewards per level</caption>
-          <thead>
-            <tr>
-              <th scope="col">Level</th>
-              <th scope="col">Members</th>
-              <th scope="col">Reward each</th>
-              <th scope="col">Level total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {programme.levels.map((level) => (
-              <tr key={level.level}>
-                <th scope="row">Level {level.level}</th>
-                <td>{level.members.toLocaleString("en-GH")}</td>
-                <td>
-                  {formatCurrency(level.rewardPerMember)} {level.rewardType === "AIRTIME" ? "airtime" : "cash"}
-                </td>
-                <td>{formatCurrency(level.levelTotal)}</td>
-              </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr>
-              <th scope="row" colSpan={3}>
-                Total over {programme.cycleDays / 7} weeks
+    <Section id="rewards" aria-labelledby="rewards-heading">
+      <SectionHeading>
+        <h2 id="rewards-heading">Yahwe-eita instant reward table</h2>
+        <Prose>
+          <p>Factoring: Subscriber top-up credit</p>
+        </Prose>
+      </SectionHeading>
+      <ScrollTable className="reward-table" caption="Rewards per week and level">
+        <thead>
+          <tr>
+            <th scope="col" className="reward-credit">
+              {formatCurrency(programme.feeAmount)} top-up credit
+            </th>
+            {deeper.map((level) => (
+              <th scope="col" key={level.level}>
+                WK/L{level.level}
               </th>
-              <td>{targetSummary(programme)}</td>
+            ))}
+            <th scope="col">Total</th>
+          </tr>
+          <tr>
+            <th scope="col">{programme.requiredDownlines} downlines</th>
+            {deeper.map((level) => (
+              <th scope="col" key={level.level}>
+                {currencySymbol}
+              </th>
+            ))}
+            <th scope="col">{currencySymbol}</th>
+          </tr>
+          <tr>
+            <th scope="col">
+              K1 WK/L1{" "}
+              <span className="reward-credit">{formatCurrency(programme.selfAirtimeReward)} instant credit plus</span>
+            </th>
+            {deeper.map((level) => (
+              <th scope="col" key={level.level}>
+                K{level.level}
+              </th>
+            ))}
+            <td />
+          </tr>
+        </thead>
+        <tbody>
+          {programme.levels.map((row, index) => (
+            <tr key={row.level}>
+              <th scope="row">
+                <div className="reward-row-label">
+                  <span>
+                  {index === 0 ? "" : `K${row.level} `}({formatCurrency(row.rewardPerMember)} ×{" "}
+                  {row.members.toLocaleString("en-GH")})
+                </span>
+                  <span className="reward-credit">{formatAmount(direct.levelTotal)}</span>
+                </div>
+              </th>
+              {deeper.map((column, columnIndex) => {
+                if (columnIndex < depth - 1 - index) {
+                  return (
+                    <td className="reward-cash" key={column.level}>
+                      {formatAmount(column.levelTotal)}
+                    </td>
+                  );
+                }
+                if (index === depth - 1 && columnIndex === 0) {
+                  return (
+                    <td className="reward-credit" key={column.level}>
+                      New starters
+                    </td>
+                  );
+                }
+                return <td className="reward-empty" key={column.level} />;
+              })}
+              {index === 0 ? (
+                <td className="reward-cash">{formatAmount(programme.targetCashEarnings)}</td>
+              ) : (
+                <td className="reward-empty" />
+              )}
             </tr>
-          </tfoot>
-        </table>
-      </div>
-    </section>
+          ))}
+        </tbody>
+      </ScrollTable>
+      <p className="reward-summary">{targetSummary(programme)}</p>
+    </Section>
   );
 }
 
 export function PurposeSection({ programme }: { programme: Programme }) {
   return (
-    <div className="site-band">
-      <section className="site-section" aria-labelledby="purpose-heading">
-        <h2 id="purpose-heading" className="sr-only">
+    <Band>
+      <Section aria-labelledby="purpose-heading">
+        <VisuallyHidden as="h2" id="purpose-heading">
           Our purpose
-        </h2>
-        <Stagger className="feature-grid">
+        </VisuallyHidden>
+        <Grid variant="feature" stagger>
           {purpose(programme).map((block) => (
             <StaggerItem key={block.title}>
-              <article className="feature-card">
-                <h3>{block.title}</h3>
-                {block.body.map((paragraph) => (
-                  <p key={paragraph}>{paragraph}</p>
-                ))}
-              </article>
+              <FeatureCard title={block.title}>
+                <Paragraphs items={block.body} />
+              </FeatureCard>
             </StaggerItem>
           ))}
-        </Stagger>
-      </section>
-    </div>
+        </Grid>
+      </Section>
+    </Band>
   );
 }
 
 export function ValuesSection() {
   return (
-    <div className="site-band site-band-dark">
-      <section className="site-section" aria-labelledby="values-heading">
-        <Reveal className="section-heading">
+    <Band dark>
+      <Section aria-labelledby="values-heading">
+        <SectionHeading>
           <h2 id="values-heading">Our corporate values</h2>
-        </Reveal>
-        <Stagger className="feature-grid">
+        </SectionHeading>
+        <Grid variant="feature" stagger>
           {corporateValues.map((value) => (
             <StaggerItem key={value.text}>
-              <article className="feature-card">
-                <Icon className="feature-icon" name={value.icon} size={30} />
-                <p className="feature-card-lead">{value.text}</p>
-              </article>
+              <FeatureCard icon={value.icon} lead={value.text} />
             </StaggerItem>
           ))}
-        </Stagger>
-      </section>
-    </div>
+        </Grid>
+      </Section>
+    </Band>
   );
 }
 
 export function HowItWorksSection({ programme }: { programme: Programme }) {
   const content = howItWorks(programme);
   return (
-    <section className="site-section site-split" id="how-it-works" aria-labelledby="how-heading">
-      <Reveal className="section-heading">
+    <Section variant="split" id="how-it-works" aria-labelledby="how-heading">
+      <SectionHeading>
         <h2 id="how-heading">How it works</h2>
-        <div className="prose-block">
-          {content.intro.map((paragraph) => (
-            <p key={paragraph}>{paragraph}</p>
-          ))}
-        </div>
-      </Reveal>
+        <Prose>
+          <Paragraphs items={content.intro} />
+        </Prose>
+      </SectionHeading>
       <div>
         {content.sections.map((section) => (
-          <Reveal className="prose-block" key={section.title}>
+          <Prose animate key={section.title}>
             <h3>{section.title}</h3>
             <p>{section.body}</p>
-          </Reveal>
+          </Prose>
         ))}
       </div>
-    </section>
+    </Section>
   );
 }
 
 export function StepsSection({ programme }: { programme: Programme }) {
   return (
-    <div className="site-band">
-      <section className="site-section" aria-labelledby="steps-heading">
-        <Reveal className="section-heading">
+    <Band>
+      <Section id="features" aria-labelledby="steps-heading">
+        <SectionHeading>
           <h2 id="steps-heading">Step by step</h2>
-        </Reveal>
-        <Stagger className="feature-grid feature-grid-4">
+        </SectionHeading>
+        <Grid variant="feature-4" stagger>
           {steps(programme).map((step) => (
             <StaggerItem key={step.title}>
-              <article className="feature-card">
-                <Icon className="feature-icon" name={step.icon} size={30} />
-                <h3>{step.title}</h3>
+              <FeatureCard icon={step.icon} title={step.title}>
                 <p>{step.body}</p>
-              </article>
+              </FeatureCard>
             </StaggerItem>
           ))}
-        </Stagger>
-      </section>
-    </div>
+        </Grid>
+      </Section>
+    </Band>
   );
 }
 
 export function TermsSection({ programme }: { programme: Programme }) {
   return (
-    <section className="site-section" id="terms" aria-labelledby="terms-heading">
-      <Reveal className="section-heading">
+    <Section id="terms" aria-labelledby="terms-heading">
+      <SectionHeading>
         <h2 id="terms-heading">Terms and conditions for members</h2>
-      </Reveal>
+      </SectionHeading>
       <ol className="terms-list">
         {terms(programme).map((term) => (
           <li key={term}>{term}</li>
         ))}
       </ol>
-      <Reveal className="section-heading">
+      <SectionHeading>
         <h3>Anti-money laundering policy</h3>
-        <div className="prose-block">
-          {antiMoneyLaundering.map((paragraph) => (
-            <p key={paragraph}>{paragraph}</p>
-          ))}
-        </div>
-      </Reveal>
-    </section>
+        <Prose>
+          <Paragraphs items={antiMoneyLaundering} />
+        </Prose>
+      </SectionHeading>
+    </Section>
   );
 }
 
 export function FaqSection({ programme }: { programme: Programme }) {
   return (
-    <div className="site-band">
-      <section className="site-section" id="faq" aria-labelledby="faq-heading">
-        <Reveal className="section-heading">
+    <Band>
+      <Section id="faq" aria-labelledby="faq-heading">
+        <SectionHeading>
           <h2 id="faq-heading">Frequently asked questions</h2>
-        </Reveal>
+        </SectionHeading>
         <div className="faq-list">
           {faqs(programme).map((faq) => (
             <details className="faq-item" key={faq.question}>
               <summary>{faq.question}</summary>
-              {faq.answer.map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
-              ))}
+              <Paragraphs items={faq.answer} />
             </details>
           ))}
         </div>
-      </section>
-    </div>
+      </Section>
+    </Band>
   );
 }
 
 export function JoinSection() {
   return (
-    <section className="site-section join-section" aria-labelledby="join-heading">
-      <Reveal className="section-heading">
+    <Section variant="join" aria-labelledby="join-heading">
+      <SectionHeading>
         <h2 id="join-heading">Ready to join?</h2>
-      </Reveal>
-      <div className="join-actions">
-        <Link className="submit-button" href="/onboarding">
+      </SectionHeading>
+      <ButtonGroup variant="join">
+        <ButtonLink variant="submit" href="/onboarding">
           Create an account
-        </Link>
-        <Link className="small-button" href="/login">
-          Log in
-        </Link>
-      </div>
-    </section>
+        </ButtonLink>
+        <ButtonLink variant="small" href="/login">
+          Login
+        </ButtonLink>
+      </ButtonGroup>
+    </Section>
   );
 }

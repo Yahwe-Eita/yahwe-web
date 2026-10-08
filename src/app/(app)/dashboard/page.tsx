@@ -7,5 +7,11 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const programme = await getProgramme();
-  return <DashboardView depthLimit={programme.depthLimit} />;
+  return (
+    <DashboardView
+      depthLimit={programme.depthLimit}
+      recruitWindowDays={programme.recruitWindowDays}
+      cycleDays={programme.cycleDays}
+    />
+  );
 }

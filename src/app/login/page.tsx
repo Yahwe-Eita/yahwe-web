@@ -4,10 +4,10 @@ import { AuthShell } from "@/components/auth-shell";
 import { LoginForm } from "@/components/auth/login-form";
 import { getSession } from "@/lib/server/session";
 
-export const metadata: Metadata = { title: "Log in" };
+export const metadata: Metadata = { title: "Login" };
 
 const notices: Record<string, string> = {
-  passwordUpdated: "Your password has been changed. Log in with your new password.",
+  passwordUpdated: "Password updated. Sign in with your new password.",
   sessionEnded: "Your session has ended. Please log in again.",
 };
 
@@ -26,7 +26,7 @@ export default async function LoginPage({
         : undefined;
 
   return (
-    <AuthShell backHref="/" title="Welcome back" description="Log in to continue to your account.">
+    <AuthShell backHref="/" title="Welcome back">
       <LoginForm notice={notice} />
     </AuthShell>
   );

@@ -1,5 +1,7 @@
 "use client";
 
+import { EmptyState } from "@/components/app/empty-state";
+import { Button } from "@/components/ui/button";
 import { getErrorMessage } from "@/lib/error-message";
 
 export function QueryLoading({ label = "Loading…" }: { label?: string }) {
@@ -21,13 +23,17 @@ export function QueryError({
   title?: string;
 }) {
   return (
-    <div className="empty-state" role="alert">
-      <span aria-hidden="true">!</span>
-      <h2>{title}</h2>
-      <p>{getErrorMessage(error, "Check your connection and try again.")}</p>
-      <button className="small-button" type="button" onClick={retry}>
-        Try again
-      </button>
-    </div>
+    <EmptyState
+      icon="!"
+      role="alert"
+      animate={false}
+      title={title}
+      description={getErrorMessage(error, "Please try again.")}
+      action={
+        <Button variant="small" onClick={retry}>
+          Retry
+        </Button>
+      }
+    />
   );
 }

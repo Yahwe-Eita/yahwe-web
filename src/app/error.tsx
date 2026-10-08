@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { Logo } from "@/components/logo";
+import { AuthShell } from "@/components/auth-shell";
+import { Button } from "@/components/ui/button";
 
 export default function RootError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
@@ -9,17 +10,14 @@ export default function RootError({ error, reset }: { error: Error & { digest?: 
   }, [error]);
 
   return (
-    <main className="auth-page">
-      <div className="auth-topbar">
-        <Logo />
-      </div>
-      <section className="auth-card" role="alert">
-        <h1 className="auth-title">Something went wrong</h1>
-        <p className="auth-description">The service is temporarily unavailable. Please try again.</p>
-        <button className="submit-button" type="button" onClick={reset}>
-          Try again
-        </button>
-      </section>
-    </main>
+    <AuthShell
+      role="alert"
+      title="Something went wrong"
+      description="The service is temporarily unavailable. Please try again."
+    >
+      <Button variant="submit" onClick={reset}>
+        Try again
+      </Button>
+    </AuthShell>
   );
 }

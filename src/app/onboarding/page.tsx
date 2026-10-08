@@ -8,5 +8,5 @@ export const dynamic = "force-dynamic";
 
 export default async function OnboardingPage() {
   const programme = await getProgramme();
-  return <Onboarding slides={onboardingSlides(programme)} minimumAge={programme.minimumAge} />;
+  return <Onboarding slides={onboardingSlides(programme)} />;
 }

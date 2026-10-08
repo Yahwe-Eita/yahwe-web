@@ -1,8 +1,5 @@
+import { QueryLoading } from "@/components/app/query-state";
+
 export default function Loading() {
-  return (
-    <div className="loading-state" role="status">
-      <span className="spinner" aria-hidden="true" />
-      <p>Loading…</p>
-    </div>
-  );
+  return <QueryLoading />;
 }

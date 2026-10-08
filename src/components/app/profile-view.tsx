@@ -4,6 +4,13 @@ import { DeleteAccount } from "@/components/app/delete-account";
 import { LogoutButton } from "@/components/app/logout-button";
 import { PageHeading } from "@/components/app/page-heading";
 import { QueryError, QueryLoading } from "@/components/app/query-state";
+import { Avatar } from "@/components/ui/avatar";
+import { ButtonGroup } from "@/components/ui/button-group";
+import { ContentSection } from "@/components/ui/content-section";
+import { Grid } from "@/components/ui/grid";
+import { PersonCard } from "@/components/ui/person-card";
+import { StatCard } from "@/components/ui/stat-card";
+import { StatusPill } from "@/components/ui/status-pill";
 import { useProfile } from "@/hooks/useProfile";
 import { formatCurrency } from "@/lib/format";
 import { useSessionUser } from "@/providers/session-provider";
@@ -22,49 +29,34 @@ export function ProfileView() {
     <>
       {heading}
       <section className="profile-card">
-        <span className="profile-avatar" aria-hidden="true">
-          {user.name.charAt(0).toUpperCase()}
-        </span>
+        <Avatar name={user.name} size="profile" />
         <div>
           <h2>{user.name}</h2>
           <p>{user.email}</p>
+          <p>Level {profile.level}</p>
         </div>
       </section>
-      <section className="stats-grid" aria-label="Profile summary">
-        <article className="stat-card">
-          <span>Downline members</span>
-          <strong>{profile.totalRecruits}</strong>
-        </article>
-        <article className="stat-card">
-          <span>Airtime rewards</span>
-          <strong>{formatCurrency(profile.balance)}</strong>
-        </article>
-        <article className="stat-card">
-          <span>Cash rewards this cycle</span>
-          <strong>{formatCurrency(profile.cashEarned)}</strong>
-        </article>
-      </section>
+      <Grid variant="stats" as="section" ariaLabel="Profile summary">
+        <StatCard label="Number of downlines" value={profile.totalRecruits} />
+        <StatCard label="Self reward airtime" value={formatCurrency(profile.balance)} />
+        <StatCard label="Cash earnings" value={formatCurrency(profile.cashEarned)} />
+      </Grid>
       {recruits.length ? (
-        <section className="content-section">
-          <div className="section-row">
-            <h2>Your direct downlines</h2>
-          </div>
-          <div className="people-grid">
+        <ContentSection title="My downlines">
+          <Grid variant="people">
             {recruits.map((recruit) => (
-              <article className="person-card" key={recruit.userId}>
-                <span className="person-avatar" aria-hidden="true">
-                  {recruit.name.charAt(0).toUpperCase()}
-                </span>
-                <strong>{recruit.name}</strong>
-                {recruit.blocked ? <span className="status-pill status-inactive">Blocked</span> : null}
-              </article>
+              <PersonCard
+                key={recruit.userId}
+                name={recruit.name}
+                badge={recruit.blocked ? <StatusPill tone="inactive">Blocked</StatusPill> : null}
+              />
             ))}
-          </div>
-        </section>
+          </Grid>
+        </ContentSection>
       ) : null}
-      <div className="profile-actions">
+      <ButtonGroup variant="profile">
         <LogoutButton />
-      </div>
+      </ButtonGroup>
       <DeleteAccount />
     </>
   );

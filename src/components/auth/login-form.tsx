@@ -1,17 +1,19 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import type { FormEvent } from "react";
 import { FormMessage } from "@/components/form-message";
 import { SubmitButton } from "@/components/submit-button";
+import { Form } from "@/components/ui/form";
+import { PasswordField } from "@/components/ui/password-field";
+import { TextField } from "@/components/ui/text-field";
+import { TextLink } from "@/components/ui/text-link";
 import { useLogin } from "@/hooks/useLogin";
 import { getErrorMessage } from "@/lib/error-message";
 
 export function LoginForm({ notice }: { notice?: string }) {
   const router = useRouter();
   const login = useLogin();
-  const [showPassword, setShowPassword] = useState(false);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -28,42 +30,26 @@ export function LoginForm({ notice }: { notice?: string }) {
   }
 
   return (
-    <form className="form-stack" onSubmit={submit}>
+    <Form onSubmit={submit}>
       <FormMessage tone="info" message={login.isIdle ? notice : undefined} />
-      <label className="field">
-        <span>Email</span>
-        <input name="email" type="email" autoComplete="email" placeholder="you@example.com" required />
-      </label>
-      <div className="field">
-        <label htmlFor="current-password">Password</label>
-        <div className="password-field">
-          <input
-            id="current-password"
-            name="password"
-            type={showPassword ? "text" : "password"}
-            autoComplete="current-password"
-            required
-          />
-          <button
-            type="button"
-            className="password-toggle"
-            onClick={() => setShowPassword((visible) => !visible)}
-            aria-label={showPassword ? "Hide password" : "Show password"}
-            aria-pressed={showPassword}
-          >
-            {showPassword ? "Hide" : "Show"}
-          </button>
-        </div>
-      </div>
+      <TextField label="Email" name="email" type="email" autoComplete="email" placeholder="Enter your email" required />
+      <PasswordField
+        id="current-password"
+        label="Password"
+        name="password"
+        autoComplete="current-password"
+        placeholder="Enter your password"
+        required
+      />
       <div className="form-row form-row-end">
-        <Link className="text-link" href="/reset-password">
+        <TextLink href="/reset-password">
           Forgot password?
-        </Link>
+        </TextLink>
       </div>
       <FormMessage message={login.error ? getErrorMessage(login.error, "Wrong email or password.") : undefined} />
       <SubmitButton pending={login.isPending} pendingLabel="Logging in…">
-        Log in
+        Login
       </SubmitButton>
-    </form>
+    </Form>
   );
 }

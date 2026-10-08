@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 const MINIMUM_VISIBLE_MS = 600;
 const FADE_MS = 300;
 
-/** Styles live here, not in globals.css, so the splash also works on the cached offline page. */
+/** Styles live here so the splash works wherever globals.css is missing; the fallbacks are system colours that follow color-scheme. */
 const styles = `
 .preloader {
   position: fixed;
@@ -17,8 +17,8 @@ const styles = `
   grid-template-rows: 1fr auto;
   place-items: center;
   padding: 2rem 1rem max(1.5rem, env(safe-area-inset-bottom));
-  background: var(--background, #f8faf7);
-  color: var(--muted, #5f6f62);
+  background: var(--background, Canvas);
+  color: var(--muted, CanvasText);
   font-family: Arial, Helvetica, sans-serif;
   transition: opacity ${FADE_MS}ms ease, visibility ${FADE_MS}ms ease;
   animation: preloader-timeout ${FADE_MS}ms ease 3s forwards;

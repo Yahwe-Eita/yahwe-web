@@ -23,7 +23,7 @@ export async function POST(request: Request) {
       return json<PhoneVerificationResult>({ accountExists: true });
     }
     const name = lookup.data?.name;
-    if (!name) throw new HttpError("This Mobile Money number could not be found.", 404);
+    if (!name) throw new HttpError("Not found. Please check the number.", 404);
 
     const otp = await apiRequest<ApiEnvelope<{ pinId: string }>>("/otp/send", {
       method: "POST",

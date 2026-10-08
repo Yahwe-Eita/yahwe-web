@@ -5,7 +5,7 @@ import { RegistrationProgress } from "@/components/auth/registration-progress";
 import { SponsorForm } from "@/components/auth/sponsor-form";
 import { getRegistration } from "@/lib/server/registration";
 
-export const metadata: Metadata = { title: "Your sponsor" };
+export const metadata: Metadata = { title: "Verify your sponsor" };
 
 export default async function SponsorPage() {
   const registration = await getRegistration();
@@ -14,8 +14,8 @@ export default async function SponsorPage() {
   return (
     <AuthShell
       backHref="/onboarding"
-      title="Your sponsor"
-      description="Enter the phone number of the member who introduced you."
+      title="Verify your sponsor"
+      description="Enter your sponsor's phone number without the leading 0."
     >
       <RegistrationProgress step="Sponsor" />
       <SponsorForm />
