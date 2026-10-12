@@ -8,7 +8,6 @@ import { Grid } from "@/components/ui/grid";
 import { IconListItem } from "@/components/ui/icon-list-item";
 import { Paragraphs } from "@/components/ui/paragraphs";
 import { Prose } from "@/components/ui/prose";
-import { ScrollTable } from "@/components/ui/scroll-table";
 import { Section } from "@/components/ui/section";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { VisuallyHidden } from "@/components/ui/visually-hidden";
@@ -22,12 +21,10 @@ import {
   purpose,
   services,
   steps,
-  targetSummary,
   terms,
   welcome,
 } from "@/content/landing";
 import type { Programme } from "@/lib/api/types";
-import { currencySymbol, formatAmount, formatCurrency } from "@/lib/format";
 
 export function WelcomeSection() {
   return (
@@ -80,91 +77,20 @@ export function ServicesSection() {
   );
 }
 
-export function RewardTableSection({ programme }: { programme: Programme }) {
-  const [direct, ...deeper] = programme.levels;
-  const depth = programme.levels.length;
+export function RewardTableSection() {
   return (
     <Section id="rewards" aria-labelledby="rewards-heading">
       <SectionHeading>
         <h2 id="rewards-heading">Yahwe-eita instant reward table</h2>
-        <Prose>
-          <p>Factoring: Subscriber top-up credit</p>
-        </Prose>
       </SectionHeading>
-      <ScrollTable className="reward-table" caption="Rewards per week and level">
-        <thead>
-          <tr>
-            <th scope="col" className="reward-credit">
-              {formatCurrency(programme.feeAmount)} top-up credit
-            </th>
-            {deeper.map((level) => (
-              <th scope="col" key={level.level}>
-                WK/L{level.level}
-              </th>
-            ))}
-            <th scope="col">Total</th>
-          </tr>
-          <tr>
-            <th scope="col">{programme.requiredDownlines} downlines</th>
-            {deeper.map((level) => (
-              <th scope="col" key={level.level}>
-                {currencySymbol}
-              </th>
-            ))}
-            <th scope="col">{currencySymbol}</th>
-          </tr>
-          <tr>
-            <th scope="col">
-              K1 WK/L1{" "}
-              <span className="reward-credit">{formatCurrency(programme.selfAirtimeReward)} instant credit plus</span>
-            </th>
-            {deeper.map((level) => (
-              <th scope="col" key={level.level}>
-                K{level.level}
-              </th>
-            ))}
-            <td />
-          </tr>
-        </thead>
-        <tbody>
-          {programme.levels.map((row, index) => (
-            <tr key={row.level}>
-              <th scope="row">
-                <div className="reward-row-label">
-                  <span>
-                  {index === 0 ? "" : `K${row.level} `}({formatCurrency(row.rewardPerMember)} ×{" "}
-                  {row.members.toLocaleString("en-GH")})
-                </span>
-                  <span className="reward-credit">{formatAmount(direct.levelTotal)}</span>
-                </div>
-              </th>
-              {deeper.map((column, columnIndex) => {
-                if (columnIndex < depth - 1 - index) {
-                  return (
-                    <td className="reward-cash" key={column.level}>
-                      {formatAmount(column.levelTotal)}
-                    </td>
-                  );
-                }
-                if (index === depth - 1 && columnIndex === 0) {
-                  return (
-                    <td className="reward-credit" key={column.level}>
-                      New starters
-                    </td>
-                  );
-                }
-                return <td className="reward-empty" key={column.level} />;
-              })}
-              {index === 0 ? (
-                <td className="reward-cash">{formatAmount(programme.targetCashEarnings)}</td>
-              ) : (
-                <td className="reward-empty" />
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </ScrollTable>
-      <p className="reward-summary">{targetSummary(programme)}</p>
+      <Image
+        className="reward-table"
+        src="/reward-table.jpeg"
+        alt="Yahwe-eita instant reward table 26, with terms and conditions"
+        width={1404}
+        height={1069}
+        sizes="(max-width: 72rem) 100vw, 72rem"
+      />
     </Section>
   );
 }

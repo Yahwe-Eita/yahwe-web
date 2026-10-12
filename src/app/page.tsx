@@ -48,7 +48,7 @@ export default async function HomePage() {
         </div>
         <WelcomeSection />
         <ServicesSection />
-        <RewardTableSection programme={programme} />
+        <RewardTableSection />
         <PurposeSection programme={programme} />
         <ValuesSection />
         <HowItWorksSection programme={programme} />
