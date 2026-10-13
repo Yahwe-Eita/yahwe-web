@@ -40,6 +40,8 @@
   --on-success-strong: light-dark(#ffffff, #101512);
   --warning-bg: light-dark(#fff6e9, #3a2c14);
   --warning-text: light-dark(#7a4a14, #f5c98a);
+  --reward-cash: light-dark(#c62828, #ff8a80);
+  --reward-credit: var(--success-strong);
   --momo: #ffd526;
   --on-momo: #201d0e;
   --whatsapp: #25d366;
@@ -476,13 +478,53 @@ h2 {
 }
 
 .reward-table {
-  display: block;
   width: 100%;
-  height: auto;
-  margin-top: 2rem;
+  min-width: 52rem;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.reward-table th,
+.reward-table td {
+  padding: 0.6rem 0.75rem;
   border: 1px solid var(--border);
-  border-radius: 1.25rem;
-  background: #fff;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.reward-table th:first-child {
+  text-align: left;
+}
+
+.reward-row-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.reward-table thead th {
+  font-size: 0.85rem;
+}
+
+.reward-table .reward-empty,
+.reward-table thead td {
+  border: 0;
+}
+
+.reward-cash {
+  color: var(--reward-cash);
+}
+
+.reward-credit {
+  color: var(--reward-credit);
+}
+
+.reward-summary {
+  margin: 1.5rem 0 0;
+  font-size: clamp(1.1rem, 2.4vw, 1.4rem);
+  font-weight: 800;
+  text-align: center;
 }
 
 .terms-list {
