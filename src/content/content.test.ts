@@ -7,19 +7,19 @@ import { formatCurrency } from "@/lib/format";
 function programme(overrides: Partial<Programme> = {}): Programme {
   return {
     feeAmount: "150.00",
-    selfAirtimeReward: "50.00",
-    airtimeReward: "10.00",
-    cashReward: "10.00",
+    selfAirtimeReward: "30.00",
+    airtimeReward: "15.00",
+    cashReward: "15.00",
     depthLimit: 8,
     requiredDownlines: 3,
     minimumAge: 18,
     recruitWindowDays: 8,
     cycleDays: 56,
-    targetCashEarnings: "98370.00",
-    targetAirtimeEarnings: "80.00",
+    targetCashEarnings: "147555.00",
+    targetAirtimeEarnings: "75.00",
     levels: [
-      { level: 1, members: 3, rewardPerMember: "10.00", rewardType: "AIRTIME", levelTotal: "30.00" },
-      { level: 2, members: 9, rewardPerMember: "10.00", rewardType: "CASH", levelTotal: "90.00" },
+      { level: 1, members: 3, rewardPerMember: "15.00", rewardType: "AIRTIME", levelTotal: "45.00" },
+      { level: 2, members: 9, rewardPerMember: "15.00", rewardType: "CASH", levelTotal: "135.00" },
     ],
     ...overrides,
   };
@@ -39,8 +39,8 @@ describe("programme-driven copy", () => {
 
   it("states the cycle target from the server totals", () => {
     const summary = targetSummary(programme());
-    expect(summary).toContain(formatCurrency("98370.00"));
-    expect(summary).toContain(formatCurrency("80.00"));
+    expect(summary).toContain(formatCurrency("147555.00"));
+    expect(summary).toContain(formatCurrency("75.00"));
     expect(summary).toContain("8 weeks");
   });
 
