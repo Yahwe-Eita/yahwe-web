@@ -1,4 +1,4 @@
-const labels = ["Sponsor", "Phone", "Verify", "Details", "Payment"] as const;
+const labels = ["Sponsor", "Phone", /* "Verify", */ "Details", "Payment"] as const;
 
 export type RegistrationStep = (typeof labels)[number];
 

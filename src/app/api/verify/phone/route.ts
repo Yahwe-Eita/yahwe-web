@@ -25,18 +25,20 @@ export async function POST(request: Request) {
     const name = lookup.data?.name;
     if (!name) throw new HttpError("Not found. Please check the number.", 404);
 
-    const otp = await apiRequest<ApiEnvelope<{ pinId: string }>>("/otp/send", {
-      method: "POST",
-      body: JSON.stringify({ phone: phone.international }),
-    });
-    const pinId = otp.data?.pinId;
-    if (!pinId) throw new HttpError("The code could not be sent. Please try again.", 502);
+    // const otp = await apiRequest<ApiEnvelope<{ pinId: string }>>("/otp/send", {
+    //   method: "POST",
+    //   body: JSON.stringify({ phone: phone.international }),
+    // });
+    // const pinId = otp.data?.pinId;
+    // if (!pinId) throw new HttpError("The code could not be sent. Please try again.", 502);
 
     await setRegistration({
       sponsorId: state.sponsorId,
       sponsorName: state.sponsorName,
       sponsorPhone: state.sponsorPhone,
-      candidate: { name, phone: phone.international, pinId },
+      // candidate: { name, phone: phone.international, pinId },
+      verifiedName: name,
+      verifiedPhone: phone.international,
     });
     return json<PhoneVerificationResult>({ accountExists: false, name, phone: phone.international });
   } catch (error) {

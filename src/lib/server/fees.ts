@@ -41,7 +41,7 @@ export async function requestFee(state: RegistrationState) {
       customerName: payload.fullName,
       customerEmail: payload.email,
       channel: payload.channel,
-      pinId: payload.pinId,
+      // pinId: payload.pinId,
     }),
   });
   if (response.status === false && !response.data) {

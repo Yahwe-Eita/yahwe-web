@@ -26,7 +26,6 @@ const pending = {
   sponsorId: 1,
   feeId: "",
   platform: "ANDROID" as const,
-  pinId: "pin-1",
 };
 
 const base: RegistrationState = { sponsorId: 1, sponsorName: "Kofi", sponsorPhone: "233200000000" };
@@ -50,19 +49,37 @@ describe("sponsor and phone ownership", () => {
     expect(response.status).toBe(403);
   });
 
-  it("marks the phone verified only after the code is confirmed", async () => {
+  it("accepts a number found on Mobile Money without sending a code", async () => {
     await setRegistration(base);
     const calls = fakeUpstream((call) => {
       if (call.path.startsWith("/verify")) return { body: { status: true, data: { name: "Ama Mensah" } } };
-      if (call.path === "/otp/send") return { body: { status: true, data: { pinId: "pin-1" } } };
-      if (call.path.startsWith("/otp/verify")) return { body: { status: true, message: "OTP verified" } };
       throw new Error(`unexpected ${call.path}`);
     });
 
     const lookup = await verifyPhone(request("/api/verify/phone", { phone: "0241234567" }));
     expect(lookup.status).toBe(200);
-    expect((await getRegistration())?.verifiedPhone).toBeUndefined();
-    expect(calls.find((c) => c.path === "/otp/send")?.body).toEqual({ phone: "233241234567" });
+    expect(calls.some((c) => c.path.startsWith("/otp"))).toBe(false);
+    const state = await getRegistration();
+    expect(state?.verifiedName).toBe("Ama Mensah");
+    expect(state?.verifiedPhone).toBe("233241234567");
+    expect(state?.verifiedPinId).toBeUndefined();
+  });
+
+  it("takes details and validates them without a code", async () => {
+    await setRegistration({ ...base, verifiedName: "Ama Mensah", verifiedPhone: "233241234567" });
+    const calls = fakeUpstream(() => ({ body: { status: true } }));
+
+    const response = await register(
+      request("/api/auth/register", { email: "ama@example.com", password: "Str0ng!pass", dateOfBirth: "1990-01-01" }),
+    );
+    expect(response.status).toBe(200);
+    expect(calls.at(-1)?.path).toBe("/auth/register?validate_only=true");
+    expect(calls.at(-1)?.body).not.toHaveProperty("pinId");
+  });
+
+  it("still confirms a code through the unused code route", async () => {
+    await setRegistration({ ...base, candidate: { name: "Ama", phone: "233241234567", pinId: "pin-1" } });
+    const calls = fakeUpstream(() => ({ body: { status: true, message: "OTP verified" } }));
 
     const confirmed = await verifyCode(request("/api/verify/code", { code: "123456" }));
     expect(confirmed.status).toBe(200);
@@ -73,7 +90,7 @@ describe("sponsor and phone ownership", () => {
     expect(state?.candidate).toBeUndefined();
   });
 
-  it("will not take details before the phone is confirmed", async () => {
+  it("will not take details before the number is found", async () => {
     await setRegistration({ ...base, candidate: { name: "Ama", phone: "233241234567", pinId: "p" } });
     fakeUpstream(() => {
       throw new Error("upstream must not be called");
@@ -108,7 +125,8 @@ describe("fee payment", () => {
     expect(await response.json()).toEqual({ outcome: "awaiting_payment" });
     const charges = calls.filter((c) => c.method === "POST" && c.path === "/fee");
     expect(charges).toHaveLength(1);
-    expect(charges[0].body).toMatchObject({ phone: "233241234567", pinId: "pin-1" });
+    expect(charges[0].body).toMatchObject({ phone: "233241234567" });
+    expect(charges[0].body).not.toHaveProperty("pinId");
     expect((await getRegistration())?.feeReference).toBe("ref-2");
   });
 
@@ -130,7 +148,7 @@ describe("fee payment", () => {
 
     const response = await startFee(request("/api/fee"));
     expect((await response.json()).outcome).toBe("registered");
-    expect(calls.at(-1)?.body).toMatchObject({ feeId: "ref-1", phone: "233241234567", pinId: "pin-1" });
+    expect(calls.at(-1)?.body).toMatchObject({ feeId: "ref-1", phone: "233241234567" });
     expect((await getSession())?.user.id).toBe("u-5");
     expect(await getRegistration()).toBeNull();
   });

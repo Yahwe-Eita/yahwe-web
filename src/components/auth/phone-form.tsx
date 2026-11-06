@@ -5,16 +5,16 @@ import { useState, type FormEvent } from "react";
 import { FormMessage } from "@/components/form-message";
 import { RegistrationProgress } from "@/components/auth/registration-progress";
 import { SubmitButton } from "@/components/submit-button";
-import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
+// import { Button } from "@/components/ui/button";
+// import { ButtonGroup } from "@/components/ui/button-group";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Form } from "@/components/ui/form";
 import { NetworkBadge } from "@/components/ui/network-badge";
 import { PhoneField } from "@/components/ui/phone-field";
 import { Stack } from "@/components/ui/stack";
-import { TextField } from "@/components/ui/text-field";
-import { useResendCode } from "@/hooks/useResendCode";
-import { useVerifyCode } from "@/hooks/useVerifyCode";
+// import { TextField } from "@/components/ui/text-field";
+// import { useResendCode } from "@/hooks/useResendCode";
+// import { useVerifyCode } from "@/hooks/useVerifyCode";
 import { useVerifyPhone } from "@/hooks/useVerifyPhone";
 import { getErrorMessage } from "@/lib/error-message";
 import { localPhoneDigits } from "@/lib/validation";
@@ -22,34 +22,38 @@ import { localPhoneDigits } from "@/lib/validation";
 export function PhoneForm() {
   const router = useRouter();
   const [phone, setPhone] = useState("");
-  const [code, setCode] = useState("");
+  // const [code, setCode] = useState("");
   const verifyPhone = useVerifyPhone();
-  const verifyCode = useVerifyCode();
-  const resendCode = useResendCode();
+  // const verifyCode = useVerifyCode();
+  // const resendCode = useResendCode();
   const lookup = verifyPhone.data;
-  const codeSent = lookup?.accountExists === false;
+  // const codeSent = lookup?.accountExists === false;
 
   function changePhone(value: string) {
     verifyPhone.reset();
-    verifyCode.reset();
-    resendCode.reset();
-    setCode("");
+    // verifyCode.reset();
+    // resendCode.reset();
+    // setCode("");
     setPhone(localPhoneDigits(value));
   }
 
   function findNumber(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    verifyPhone.mutate(phone);
+    verifyPhone.mutate(phone, {
+      onSuccess: (result) => {
+        if (!result.accountExists) router.push("/register/details");
+      },
+    });
   }
 
-  function confirmCode(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    verifyCode.mutate(code, { onSuccess: () => router.push("/register/details") });
-  }
+  // function confirmCode(event: FormEvent<HTMLFormElement>) {
+  //   event.preventDefault();
+  //   verifyCode.mutate(code, { onSuccess: () => router.push("/register/details") });
+  // }
 
   return (
     <Stack>
-      <RegistrationProgress step={codeSent ? "Verify" : "Phone"} />
+      <RegistrationProgress step="Phone" />
       <NetworkBadge>MTN Mobile Money</NetworkBadge>
       <Form onSubmit={findNumber}>
         <PhoneField
@@ -59,7 +63,6 @@ export function PhoneForm() {
           placeholder="Enter phone number"
           value={phone}
           onChange={(event) => changePhone(event.target.value)}
-          readOnly={codeSent}
           required
         />
         <FormMessage
@@ -73,14 +76,12 @@ export function PhoneForm() {
             </ButtonLink>
           </div>
         ) : null}
-        {codeSent ? null : (
-          <SubmitButton pending={verifyPhone.isPending} pendingLabel="Checking…" disabled={phone.length !== 9}>
-            Send code
-          </SubmitButton>
-        )}
+        <SubmitButton pending={verifyPhone.isPending} pendingLabel="Checking…" disabled={phone.length !== 9}>
+          Continue
+        </SubmitButton>
       </Form>
 
-      {codeSent ? (
+      {/* {codeSent ? (
         <Form onSubmit={confirmCode}>
           <div className="verified-panel" role="status">
             <div>
@@ -124,7 +125,7 @@ export function PhoneForm() {
             </Button>
           </ButtonGroup>
         </Form>
-      ) : null}
+      ) : null} */}
     </Stack>
   );
 }
