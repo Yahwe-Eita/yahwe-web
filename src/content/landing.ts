@@ -7,7 +7,7 @@ const WHATSAPP_NUMBER = "233542828173";
 export const contact = {
   whatsappDisplay: `0${WHATSAPP_NUMBER.slice(3)}`,
   whatsappUrl: `https://wa.me/${WHATSAPP_NUMBER}`,
-  email: "info.yahwe1to3@gmail.com",
+  email: "yahwe1to3@gmail.com",
 } as const;
 
 export const welcome = [

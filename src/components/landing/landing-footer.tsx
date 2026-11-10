@@ -5,8 +5,8 @@ export function LandingFooter() {
   return (
     <footer className="site-footer">
       <div className="site-footer-credit">
-        <span>Powered by</span>
-        <Image src="/synergista-dark.png" alt="Synergista Ltd" width={80} height={65} />
+        <Image src="/synergista-dark.png" alt="Synergista Culture Ltd logo" width={40} height={40} />
+        <span>Powered by Synergista Culture Ltd</span>
       </div>
       <div className="site-footer-bottom">
         <p>Yahwe-Eita. All rights reserved.</p>
