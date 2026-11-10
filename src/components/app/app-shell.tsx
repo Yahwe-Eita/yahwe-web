@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { AppNav } from "@/components/app/app-nav";
 import { LogoutButton } from "@/components/app/logout-button";
 import { Logo } from "@/components/logo";
+import { PoweredBy } from "@/components/powered-by";
 import { initialOf } from "@/components/ui/avatar";
 import { IconLink } from "@/components/ui/icon-link";
 import type { SessionUser } from "@/lib/api/types";
@@ -34,6 +35,9 @@ export function AppShell({ children, user }: { children: ReactNode; user: Sessio
           <main className="app-content" id="main-content" tabIndex={-1}>
             {children}
           </main>
+          <footer className="app-footer">
+            <PoweredBy />
+          </footer>
         </div>
         <div className="mobile-nav">
           <AppNav />

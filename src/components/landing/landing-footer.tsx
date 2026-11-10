@@ -1,13 +1,10 @@
-import Image from "next/image";
 import { Icon } from "@/components/icon";
+import { PoweredBy } from "@/components/powered-by";
 
 export function LandingFooter() {
   return (
     <footer className="site-footer">
-      <div className="site-footer-credit">
-        <Image src="/synergista-dark.png" alt="Synergista Culture Ltd logo" width={40} height={40} />
-        <span>Powered by Synergista Culture Ltd</span>
-      </div>
+      <PoweredBy onBrand />
       <div className="site-footer-bottom">
         <p>Yahwe-Eita. All rights reserved.</p>
         <a href="#top">

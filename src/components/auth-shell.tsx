@@ -1,5 +1,6 @@
 import type { AriaRole, ReactNode } from "react";
 import { Logo } from "@/components/logo";
+import { PoweredBy } from "@/components/powered-by";
 import { AuthTitle } from "@/components/ui/auth-title";
 import { IconLink } from "@/components/ui/icon-link";
 
@@ -24,6 +25,7 @@ export function AuthShell({ children, backHref, title, description, wide = false
         {description ? <p className="auth-description">{description}</p> : null}
         {children}
       </div>
+      <PoweredBy />
     </main>
   );
 }
